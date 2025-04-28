@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tubes/penelitian.dart';
+import 'penelitian.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 void main() {

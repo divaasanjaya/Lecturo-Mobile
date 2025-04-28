@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'viewAbdimas.dart';
 
 void main() {
   runApp(const MyApp_abdimas());
@@ -27,14 +28,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final List<Map<String, dynamic>> data = [
-    {
-      "title": "Bimbingan Belajar untuk Siswa SD",
-      "date": "20 Desember 2024"
-    },
-    {
-      "title": "Community Service Learning 2024",
-      "date": "15 Oktober 2024"
-    }
+    {"title": "Bimbingan Belajar untuk Siswa SD", "date": "20 Desember 2024"},
+    {"title": "Community Service Learning 2024", "date": "15 Oktober 2024"},
   ];
 
   final judulInput = TextEditingController();
@@ -46,8 +41,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final List<String> bulan = [
     '',
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    'Januari',
+    'Februari',
+    'Maret',
+    'April',
+    'Mei',
+    'Juni',
+    'Juli',
+    'Agustus',
+    'September',
+    'Oktober',
+    'November',
+    'Desember',
   ];
 
   @override
@@ -78,72 +83,83 @@ class _MyHomePageState extends State<MyHomePage> {
           body: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: 20,
+                ),
                 child: Row(
                   children: [
                     // Jika sedang mencari, tampilkan search bar
                     isSearching
                         ? Expanded(
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              height: 40,
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                children: [
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: TextField(
-                                      controller: searchController,
-                                      autofocus: true,
-                                      style: const TextStyle(fontSize: 14),
-                                      decoration: const InputDecoration(
-                                        hintText: "Cari abdimas...",
-                                        border: InputBorder.none,
-                                      ),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            height: 40,
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              children: [
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: TextField(
+                                    controller: searchController,
+                                    autofocus: true,
+                                    style: const TextStyle(fontSize: 14),
+                                    decoration: const InputDecoration(
+                                      hintText: "Cari abdimas...",
+                                      border: InputBorder.none,
                                     ),
                                   ),
-                                  IconButton(
-                                    icon: const Icon(Icons.mic, color: Colors.grey),
-                                    onPressed: () {
-                                      // aksi mic
-                                    },
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.mic,
+                                    color: Colors.grey,
+                                  ),
+                                  onPressed: () {
+                                    // aksi mic
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                        : Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF9BC60),
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0xFF2A2A2A),
+                                    blurRadius: 4,
+                                    offset: Offset(0, 4),
                                   ),
                                 ],
                               ),
-                            ),
-                          )
-                        : Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF9BC60),
-                                  borderRadius: BorderRadius.circular(20),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Color(0xFF2A2A2A),
-                                      blurRadius: 4,
-                                      offset: Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: const Text(
-                                  "Daftar Abdimas",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Color(0xFF004643),
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'Outfit',
-                                  ),
+                              child: const Text(
+                                "Daftar Abdimas",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Color(0xFF004643),
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Outfit',
                                 ),
                               ),
-                              const SizedBox(width: 71), // jarak tambahan antara tulisan dan icon search
-                            ],
-                          ),
+                            ),
+                            const SizedBox(
+                              width: 71,
+                            ), // jarak tambahan antara tulisan dan icon search
+                          ],
+                        ),
 
                     // Ikon search dengan dekorasi
                     if (!isSearching)
@@ -167,7 +183,10 @@ class _MyHomePageState extends State<MyHomePage> {
                               ),
                             ],
                           ),
-                          child: const Icon(Icons.search, color: Color(0xFF004643)),
+                          child: const Icon(
+                            Icons.search,
+                            color: Color(0xFF004643),
+                          ),
                         ),
                       ),
 
@@ -194,7 +213,10 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                         GestureDetector(
                           onTap: _showTambahDialog,
-                          child: const Icon(Icons.add, color: Color(0xFF004643)),
+                          child: const Icon(
+                            Icons.add,
+                            color: Color(0xFF004643),
+                          ),
                         ),
                       ],
                     ),
@@ -203,7 +225,9 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16), // Jarak kanan-kiri
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                  ), // Jarak kanan-kiri
                   child: ListView.builder(
                     itemCount: data.length,
                     itemBuilder: (context, index) {
@@ -215,7 +239,10 @@ class _MyHomePageState extends State<MyHomePage> {
                         margin: EdgeInsets.only(bottom: 20),
                         color: Color(0xFFABD1C6),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 15,
+                            vertical: 15,
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -238,22 +265,40 @@ class _MyHomePageState extends State<MyHomePage> {
                                 ),
                               ),
                               SizedBox(height: 8),
-                              
+
                               // Tombol & Ikon
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   ElevatedButton(
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Color(0xFF004643), // Warna hijau tua
-                                      foregroundColor: Color(0xFFABD1C6), // Warna teks
+                                      backgroundColor: Color(
+                                        0xFF004643,
+                                      ), // Warna hijau tua
+                                      foregroundColor: Color(
+                                        0xFFABD1C6,
+                                      ), // Warna teks
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(10),
                                       ),
-                                      padding: EdgeInsets.symmetric(horizontal: 50, vertical: 6),
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 50,
+                                        vertical: 6,
+                                      ),
                                     ),
                                     onPressed: () {
-                                      // Aksi tombol
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) => MyApp_viewAbdimas(
+                                                title: research["title"] ?? "",
+                                                date: research["date"] ?? "",
+                                                desc: research["desc"] ?? "",
+                                              ),
+                                        ),
+                                      );
                                     },
                                     child: Text(
                                       "View Abdimas",
@@ -270,18 +315,29 @@ class _MyHomePageState extends State<MyHomePage> {
                                       SizedBox(
                                         width: 53,
                                         child: IconButton(
-                                          icon: Icon(Icons.edit, color: Color(0xFF004643), size: 25),
+                                          icon: Icon(
+                                            Icons.edit,
+                                            color: Color(0xFF004643),
+                                            size: 25,
+                                          ),
                                           padding: EdgeInsets.zero,
                                           constraints: BoxConstraints(),
                                           onPressed: () {
-                                            _showTambahDialog(initialData: data[index], index: index);
+                                            _showTambahDialog(
+                                              initialData: data[index],
+                                              index: index,
+                                            );
                                           },
                                         ),
                                       ),
                                       SizedBox(
                                         width: 30,
                                         child: IconButton(
-                                          icon: Icon(Icons.delete, color: Color(0xFF004643), size: 25),
+                                          icon: Icon(
+                                            Icons.delete,
+                                            color: Color(0xFF004643),
+                                            size: 25,
+                                          ),
                                           padding: EdgeInsets.zero,
                                           constraints: BoxConstraints(),
                                           onPressed: () {
@@ -292,7 +348,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     ],
                                   ),
                                 ],
-                              )
+                              ),
                             ],
                           ),
                         ),
@@ -300,7 +356,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     },
                   ),
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -334,7 +390,8 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 Expanded(
                   child: SingleChildScrollView(
-                    child: Center( // Optional biar container-nya ketengah
+                    child: Center(
+                      // Optional biar container-nya ketengah
                       child: Container(
                         width: MediaQuery.of(context).size.width * 0.9,
                         padding: const EdgeInsets.all(16),
@@ -353,7 +410,9 @@ class _MyHomePageState extends State<MyHomePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              initialData != null ? "Edit Abdimas" : "Create Abdimas",
+                              initialData != null
+                                  ? "Edit Abdimas"
+                                  : "Create Abdimas",
                               style: TextStyle(
                                 fontSize: 23,
                                 fontWeight: FontWeight.bold,
@@ -361,8 +420,16 @@ class _MyHomePageState extends State<MyHomePage> {
                               ),
                             ),
                             const SizedBox(height: 13),
-                            _buildTextField("Nama Kegiatan", "isi nama kegiatan pengabdian masyarakat", judulInput),
-                            _buildTextField("Deskripsi", "isi deskripsi kegiatan", deskripsiInput),
+                            _buildTextField(
+                              "Nama Kegiatan",
+                              "isi nama kegiatan pengabdian masyarakat",
+                              judulInput,
+                            ),
+                            _buildTextField(
+                              "Deskripsi",
+                              "isi deskripsi kegiatan",
+                              deskripsiInput,
+                            ),
                             const SizedBox(height: 12),
                             const Text(
                               "Tanggal Pelaksanaan",
@@ -386,7 +453,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                     lastDate: DateTime(2100),
                                   );
                                   if (pickedDate != null) {
-                                    final formattedDate = "${pickedDate.day} ${bulan[pickedDate.month]} ${pickedDate.year}";
+                                    final formattedDate =
+                                        "${pickedDate.day} ${bulan[pickedDate.month]} ${pickedDate.year}";
                                     setState(() {
                                       tanggalInput.text = formattedDate;
                                     });
@@ -434,7 +502,9 @@ class _MyHomePageState extends State<MyHomePage> {
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFFF9BC60),
-                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 10,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(5),
                                   ),
@@ -456,7 +526,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                     ),
                   ),
-                )
+                ),
               ],
             ),
           ),
@@ -465,7 +535,11 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget _buildTextField(String label, String hint, TextEditingController controller) {
+  Widget _buildTextField(
+    String label,
+    String hint,
+    TextEditingController controller,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'viewCourse.dart';
 
 void main() {
   runApp(const MyApp_course());
@@ -31,20 +32,20 @@ class _MyHomePageState extends State<MyHomePage> {
       "kode": "CAK3BAB7",
       "title": "PEMROGRAMAN BERORIENTASI OBJEK",
       "kelas": "IF-46-06",
-      "sks": "4"
+      "sks": "4",
     },
     {
       "kode": "CAK2BAF7",
       "title": "APLIKASI BERBASIS PLATFORM",
       "kelas": "IF-46-06",
-      "sks": "3"
+      "sks": "3",
     },
     {
       "kode": "CBK3BKF7",
       "title": "PEMBELAJARAN MESIN",
       "kelas": "IF-46-06",
-      "sks": "3"
-    }
+      "sks": "3",
+    },
   ];
 
   final kodeInput = TextEditingController();
@@ -84,72 +85,83 @@ class _MyHomePageState extends State<MyHomePage> {
           body: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: 20,
+                ),
                 child: Row(
                   children: [
                     // Jika sedang mencari, tampilkan search bar
                     isSearching
                         ? Expanded(
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              height: 40,
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                children: [
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: TextField(
-                                      controller: searchController,
-                                      autofocus: true,
-                                      style: const TextStyle(fontSize: 14),
-                                      decoration: const InputDecoration(
-                                        hintText: "Cari course...",
-                                        border: InputBorder.none,
-                                      ),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            height: 40,
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              children: [
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: TextField(
+                                    controller: searchController,
+                                    autofocus: true,
+                                    style: const TextStyle(fontSize: 14),
+                                    decoration: const InputDecoration(
+                                      hintText: "Cari course...",
+                                      border: InputBorder.none,
                                     ),
                                   ),
-                                  IconButton(
-                                    icon: const Icon(Icons.mic, color: Colors.grey),
-                                    onPressed: () {
-                                      // aksi mic
-                                    },
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.mic,
+                                    color: Colors.grey,
+                                  ),
+                                  onPressed: () {
+                                    // aksi mic
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                        : Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF9BC60),
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0xFF2A2A2A),
+                                    blurRadius: 4,
+                                    offset: Offset(0, 4),
                                   ),
                                 ],
                               ),
-                            ),
-                          )
-                        : Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF9BC60),
-                                  borderRadius: BorderRadius.circular(20),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Color(0xFF2A2A2A),
-                                      blurRadius: 4,
-                                      offset: Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: const Text(
-                                  "Daftar Course",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Color(0xFF004643),
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'Outfit',
-                                  ),
+                              child: const Text(
+                                "Daftar Course",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Color(0xFF004643),
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Outfit',
                                 ),
                               ),
-                              const SizedBox(width: 85), // jarak tambahan antara tulisan dan icon search
-                            ],
-                          ),
+                            ),
+                            const SizedBox(
+                              width: 85,
+                            ), // jarak tambahan antara tulisan dan icon search
+                          ],
+                        ),
 
                     // Ikon search dengan dekorasi
                     if (!isSearching)
@@ -173,7 +185,10 @@ class _MyHomePageState extends State<MyHomePage> {
                               ),
                             ],
                           ),
-                          child: const Icon(Icons.search, color: Color(0xFF004643)),
+                          child: const Icon(
+                            Icons.search,
+                            color: Color(0xFF004643),
+                          ),
                         ),
                       ),
 
@@ -200,7 +215,10 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                         GestureDetector(
                           onTap: _showTambahDialog,
-                          child: const Icon(Icons.add, color: Color(0xFF004643)),
+                          child: const Icon(
+                            Icons.add,
+                            color: Color(0xFF004643),
+                          ),
                         ),
                       ],
                     ),
@@ -209,7 +227,9 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16), // Jarak kanan-kiri
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                  ), // Jarak kanan-kiri
                   child: ListView.builder(
                     itemCount: data.length,
                     itemBuilder: (context, index) {
@@ -221,7 +241,10 @@ class _MyHomePageState extends State<MyHomePage> {
                         margin: EdgeInsets.only(bottom: 20),
                         color: Color(0xFFABD1C6),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 15,
+                            vertical: 15,
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -259,22 +282,36 @@ class _MyHomePageState extends State<MyHomePage> {
                                 ),
                               ),
                               SizedBox(height: 4),
-                              
+
                               // Tombol & Ikon
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   ElevatedButton(
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Color(0xFF004643), // Warna hijau tua
-                                      foregroundColor: Color(0xFFABD1C6), // Warna teks
+                                      backgroundColor: Color(
+                                        0xFF004643,
+                                      ), // Warna hijau tua
+                                      foregroundColor: Color(
+                                        0xFFABD1C6,
+                                      ), // Warna teks
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(10),
                                       ),
-                                      padding: EdgeInsets.symmetric(horizontal: 50, vertical: 6),
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 50,
+                                        vertical: 6,
+                                      ),
                                     ),
                                     onPressed: () {
-                                      // Aksi tombol
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) => MyApp_viewCourse(),
+                                        ),
+                                      );
                                     },
                                     child: Text(
                                       "View Course",
@@ -291,18 +328,29 @@ class _MyHomePageState extends State<MyHomePage> {
                                       SizedBox(
                                         width: 53,
                                         child: IconButton(
-                                          icon: Icon(Icons.edit, color: Color(0xFF004643), size: 25),
+                                          icon: Icon(
+                                            Icons.edit,
+                                            color: Color(0xFF004643),
+                                            size: 25,
+                                          ),
                                           padding: EdgeInsets.zero,
                                           constraints: BoxConstraints(),
                                           onPressed: () {
-                                            _showTambahDialog(initialData: data[index], index: index);
+                                            _showTambahDialog(
+                                              initialData: data[index],
+                                              index: index,
+                                            );
                                           },
                                         ),
                                       ),
                                       SizedBox(
                                         width: 40,
                                         child: IconButton(
-                                          icon: Icon(Icons.delete, color: Color(0xFF004643), size: 25),
+                                          icon: Icon(
+                                            Icons.delete,
+                                            color: Color(0xFF004643),
+                                            size: 25,
+                                          ),
                                           padding: EdgeInsets.zero,
                                           constraints: BoxConstraints(),
                                           onPressed: () {
@@ -313,7 +361,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     ],
                                   ),
                                 ],
-                              )
+                              ),
                             ],
                           ),
                         ),
@@ -321,7 +369,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     },
                   ),
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -357,7 +405,8 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 Expanded(
                   child: SingleChildScrollView(
-                    child: Center( // Optional biar container-nya ketengah
+                    child: Center(
+                      // Optional biar container-nya ketengah
                       child: Container(
                         width: MediaQuery.of(context).size.width * 0.9,
                         padding: const EdgeInsets.all(16),
@@ -376,7 +425,9 @@ class _MyHomePageState extends State<MyHomePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              initialData != null ? "Edit Course" : "Create Course",
+                              initialData != null
+                                  ? "Edit Course"
+                                  : "Create Course",
                               style: const TextStyle(
                                 fontSize: 23,
                                 fontWeight: FontWeight.bold,
@@ -385,14 +436,26 @@ class _MyHomePageState extends State<MyHomePage> {
                             ),
                             const SizedBox(height: 13),
                             if (initialData == null)
-                              _buildTextField("Kode Mata Kuliah", "isi kode mata kuliah", kodeInput),
-                            
-                            _buildTextField("Nama Mata Kuliah", "isi nama mata kuliah", namaInput),
+                              _buildTextField(
+                                "Kode Mata Kuliah",
+                                "isi kode mata kuliah",
+                                kodeInput,
+                              ),
+
+                            _buildTextField(
+                              "Nama Mata Kuliah",
+                              "isi nama mata kuliah",
+                              namaInput,
+                            ),
                             _buildTextField("Kelas ", "isi  kelas", kelasInput),
                             _buildTextField("SKS", "isi sks", sksInput),
                             if (initialData == null)
-                              _buildTextField("Kode Dosen Koordinator ", "isi kode dosen koordinator", doskorInput),
-                            
+                              _buildTextField(
+                                "Kode Dosen Koordinator ",
+                                "isi kode dosen koordinator",
+                                doskorInput,
+                              ),
+
                             const SizedBox(height: 12),
                             const Text(
                               "Dosen : Diva Sanjaya [DSW]",
@@ -411,11 +474,13 @@ class _MyHomePageState extends State<MyHomePage> {
                                     if (initialData != null && index != null) {
                                       // Edit data (tanpa deskripsi dan URL)
                                       data[index] = {
-                                        'kode': data[index]['kode'], // pertahankan
+                                        'kode':
+                                            data[index]['kode'], // pertahankan
                                         'title': namaInput.text,
                                         'kelas': kelasInput.text,
                                         'sks': sksInput.text,
-                                        'doskor': data[index]['doskor'], // pertahankan
+                                        'doskor':
+                                            data[index]['doskor'], // pertahankan
                                       };
                                     } else {
                                       data.add({
@@ -436,7 +501,9 @@ class _MyHomePageState extends State<MyHomePage> {
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFFF9BC60),
-                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 10,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(5),
                                   ),
@@ -458,7 +525,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                     ),
                   ),
-                )
+                ),
               ],
             ),
           ),
@@ -467,7 +534,11 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget _buildTextField(String label, String hint, TextEditingController controller) {
+  Widget _buildTextField(
+    String label,
+    String hint,
+    TextEditingController controller,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

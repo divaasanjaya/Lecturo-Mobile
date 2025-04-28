@@ -30,6 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  url_launcher: ^6.2.1
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -58,11 +59,14 @@ flutter:
     fonts:
       - asset: fonts/Outfit-Regular.ttf
       - asset: fonts/Outfit-Bold.ttf
-        weight: bold
+        weight: 500
       - asset: fonts/Outfit-Medium.ttf
         weight: 300
   assets:
     -  assets/background.jpg
+    -  assets/course.png
+    -  assets/penelitian.png
+    -  assets/pengmas.png
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.

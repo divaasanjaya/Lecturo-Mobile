@@ -161,10 +161,6 @@ class _LoginPageState extends State<LoginPage> {
                       TextField(
                         controller: _kodeController,
                         decoration: InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 100,
-                            vertical: 10,
-                          ),
                           filled: true,
                           fillColor: Color(0xff004643),
                           hintText: "Kode anda",
