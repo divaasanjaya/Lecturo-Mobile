@@ -28,6 +28,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _kodeController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final Dio _dio = Dio();
+  String kode = '';
   String? errorMessage;
 
   Future<void> login() async {
@@ -45,17 +46,20 @@ class _LoginPageState extends State<LoginPage> {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString("kode", data["dosen"]["kode"]);
         await prefs.setString("nama", data["dosen"]["nama"]);
+        kode = data["dosen"]["kode"];
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => DashboardPage()),
+          MaterialPageRoute(builder: (context) => DashboardPage(kode: kode)),
         );
       } else {
+        if (!mounted) return;
         setState(() {
           errorMessage = data["message"];
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         errorMessage = "Kode atau password Anda salah!";
       });

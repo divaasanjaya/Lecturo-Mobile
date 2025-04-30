@@ -186,7 +186,9 @@ class _HomePageState extends State<HomePage> {
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => MyApp_course()),
+              MaterialPageRoute(
+                builder: (context) => MyApp_course(kodePengampu: ''),
+              ),
             );
           },
         ),
@@ -249,7 +251,12 @@ class _HomePageState extends State<HomePage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => MyApp_viewCourse(),
+                            builder:
+                                (context) => MyApp_viewCourse(
+                                  kodeDosen: '',
+                                  kodeMatkul: '',
+                                  kodeKelas: '',
+                                ),
                           ),
                         );
                       } else if (newValue == 'Nilai') {

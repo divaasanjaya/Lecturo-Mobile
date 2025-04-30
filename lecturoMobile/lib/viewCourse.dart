@@ -3,32 +3,198 @@ import 'package:flutter/gestures.dart';
 import 'viewMahasiswa.dart';
 import 'viewNilai.dart';
 import 'course.dart';
+import 'dart:convert';
+import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  runApp(const MyApp_viewCourse());
+  runApp(const MyApp_viewCourse(kodeDosen: '', kodeMatkul: '', kodeKelas: ''));
 }
 
 class MyApp_viewCourse extends StatelessWidget {
-  const MyApp_viewCourse({super.key});
+  final String kodeDosen;
+  final String kodeMatkul;
+  final String kodeKelas;
+
+  const MyApp_viewCourse({
+    Key? key,
+    required this.kodeDosen,
+    required this.kodeMatkul,
+    required this.kodeKelas,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(fontFamily: 'Outfit'),
-      home: const LectureScreen(),
+      home: LectureScreen(
+        kodeDosen: kodeDosen,
+        kodeMatkul: kodeMatkul,
+        kodeKelas: kodeKelas,
+      ),
     );
   }
 }
 
 class LectureScreen extends StatefulWidget {
-  const LectureScreen({super.key});
+  LectureScreen({
+    Key? key,
+    required this.kodeDosen,
+    required this.kodeMatkul,
+    required this.kodeKelas,
+  }) : super(key: key);
+
+  final String kodeDosen;
+  final String kodeMatkul;
+  final String kodeKelas;
 
   @override
   State<LectureScreen> createState() => _LectureScreenState();
 }
 
 class _LectureScreenState extends State<LectureScreen> {
+  final Dio _dio = Dio();
+  String? errorMessage;
+  String namaDosen = '';
+  String kodeDosen = '';
+  String namaCourse = '';
+  String kodeKelas = '';
+  int sks = 0;
+  String kodeMatkul = '';
+  String kodeDosenKoor = '';
+  String namaDosenKoor = '';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchKodeCourse();
+    fetchKodeDosen();
+    fetchDosenKoor();
+  }
+
+  Future<void> fetchDosenKoor() async {
+    try {
+      final response = await _dio.post(
+        "http://10.0.2.2/lecturo/getDosenKoor.php",
+        data: {"kode": widget.kodeMatkul},
+      );
+
+      final data = response.data;
+      if (data["success"]) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("dosenkoor", jsonEncode(data["dosenkoor"]));
+
+        setState(() {
+          kodeDosenKoor = data["dosenkoor"]["kodeDosen"];
+        });
+      } else {
+        setState(() {
+          errorMessage = data["message"];
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = "Kode atau password Anda salah!";
+      });
+    }
+
+    fetchKodeDosen2();
+  }
+
+  Future<void> fetchKodeDosen2() async {
+    try {
+      final response = await _dio.post(
+        "http://10.0.2.2/lecturo/getDosen.php",
+        data: {"kode": kodeDosenKoor},
+      );
+
+      final data = response.data;
+      if (data["success"]) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("dosen", jsonEncode(data["dosen"]));
+
+        setState(() {
+          namaDosenKoor = data["dosen"]["nama"];
+          kodeDosenKoor = data["dosen"]["kode"];
+        });
+      } else {
+        setState(() {
+          errorMessage = data["message"];
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = "Kode atau password Anda salah!";
+      });
+    }
+  }
+
+  Future<void> fetchKodeDosen() async {
+    try {
+      final response = await _dio.post(
+        "http://10.0.2.2/lecturo/getDosen.php",
+        data: {"kode": widget.kodeDosen},
+      );
+
+      final data = response.data;
+      if (data["success"]) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("dosen", jsonEncode(data["dosen"]));
+
+        setState(() {
+          namaDosen = data["dosen"]["nama"];
+          kodeDosen = data["dosen"]["kode"];
+        });
+      } else {
+        setState(() {
+          errorMessage = data["message"];
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = "Kode atau password Anda salah!";
+      });
+    }
+  }
+
+  Future<void> fetchKodeCourse() async {
+    try {
+      final response = await _dio.post(
+        "http://10.0.2.2/lecturo/getCourse2.php",
+        data: {
+          "kodeMatkul": widget.kodeMatkul,
+          "kodeDosen": widget.kodeDosen,
+          "kodeKelas": widget.kodeKelas,
+        },
+      );
+
+      final data = response.data;
+      if (data["success"]) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("course", jsonEncode(data["course"]));
+
+        if (!mounted) return;
+        setState(() {
+          namaCourse = data["course"]["nama"];
+          kodeKelas = data["course"]["kodeKelas"];
+          kodeMatkul = data["course"]["kodeMatkul"];
+          sks = data["course"]["sks"];
+        });
+      } else {
+        if (!mounted) return;
+        setState(() {
+          errorMessage = data["message"];
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        errorMessage = "Kode atau password Anda salah!";
+      });
+    }
+  }
+
   String _dropdownValue = 'Activity';
   final TextEditingController namaQuizInput = TextEditingController();
   final TextEditingController kodeMatkulInput = TextEditingController();
@@ -311,7 +477,10 @@ class _LectureScreenState extends State<LectureScreen> {
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => MyApp_course()),
+              MaterialPageRoute(
+                builder:
+                    (context) => MyApp_course(kodePengampu: widget.kodeDosen),
+              ),
             );
           },
         ),
@@ -414,7 +583,7 @@ class _LectureScreenState extends State<LectureScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "NAMA MATA KULIAH",
+                            namaCourse,
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -423,7 +592,7 @@ class _LectureScreenState extends State<LectureScreen> {
                           ),
                           const SizedBox(height: 0),
                           Text(
-                            "[KODE MATA KULIAH]",
+                            kodeMatkul,
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -432,16 +601,16 @@ class _LectureScreenState extends State<LectureScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            "Kelas: ...",
+                            "Kelas: ${kodeKelas}",
                             style: TextStyle(fontSize: 12, color: Colors.black),
                           ),
                           Text(
-                            "SKS: ...",
+                            "SKS: ${sks}",
                             style: TextStyle(fontSize: 12, color: Colors.black),
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            "Dosen Pengampu: Nama Dosen [Kode Dosen]",
+                            "Dosen Pengampu: ${namaDosen} [${kodeDosen}]",
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -459,7 +628,7 @@ class _LectureScreenState extends State<LectureScreen> {
                               children: [
                                 const TextSpan(text: 'Dosen Koordinator: '),
                                 TextSpan(
-                                  text: 'Nama Dosen [Kode Dosen]',
+                                  text: '$namaDosenKoor [$kodeDosenKoor]',
                                   style: const TextStyle(
                                     color: Colors.black,
                                     decoration: TextDecoration.underline,

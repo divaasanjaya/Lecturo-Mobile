@@ -3,28 +3,33 @@ import 'course.dart';
 import 'penelitian.dart';
 import 'package:flutter/material.dart';
 import 'main.dart';
+import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  runApp(const DashboardPage());
+  runApp(const DashboardPage(kode: ''));
 }
 
 class DashboardPage extends StatelessWidget {
-  const DashboardPage({Key? key}) : super(key: key);
+  final String kode;
+  const DashboardPage({Key? key, required this.kode}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Lecturo Homepage',
       theme: ThemeData(fontFamily: 'Outfit'),
-      home: MyHomePage(title: 'Lecturo Homepage'),
+      home: MyHomePage(title: 'Lecturo Homepage', kode: kode),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key, required this.title}) : super(key: key);
+  MyHomePage({Key? key, required this.title, required this.kode})
+    : super(key: key);
   final String title;
+  final String kode;
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -33,6 +38,48 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int selected = 0;
   PageController pc = PageController(initialPage: 0);
+  String nama = '';
+  String kode = '';
+  final Dio _dio = Dio();
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchKode();
+  }
+
+  Future<void> fetchKode() async {
+    try {
+      final response = await _dio.post(
+        "http://10.0.2.2/lecturo/getDosen.php",
+        data: {"kode": widget.kode},
+      );
+
+      final data = response.data;
+      if (data["success"]) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("kode", data["dosen"]["kode"]);
+        await prefs.setString("nama", data["dosen"]["nama"]);
+
+        if (!mounted) return;
+        setState(() {
+          nama = data["dosen"]["nama"];
+          kode = data["dosen"]["kode"];
+        });
+      } else {
+        if (!mounted) return;
+        setState(() {
+          errorMessage = data["message"];
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        errorMessage = "Kode atau password Anda salah!";
+      });
+    }
+  }
 
   void _showExitConfirmation() {
     showDialog(
@@ -131,14 +178,14 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
-                        children: const [
-                          Text(
+                        children: [
+                          const Text(
                             "Good Morning",
                             style: TextStyle(color: Colors.white, fontSize: 12),
                           ),
                           Text(
-                            "Diva Sanjaya",
-                            style: TextStyle(
+                            nama.isNotEmpty ? nama : "Memuat..",
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: Color(0xFFF9BC60),
@@ -207,9 +254,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 ],
               ),
             ),
-            MyApp_course(),
-            MyApp_penelitian(),
-            MyApp_abdimas(),
+            MyApp_course(kodePengampu: kode),
+            MyApp_penelitian(kodeDosen: kode),
+            MyApp_abdimas(kodeDosen: kode),
           ],
         ),
       ),

@@ -1,44 +1,79 @@
 import 'package:flutter/material.dart';
 import 'viewPenelitian.dart';
+import 'dart:convert';
+import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  runApp(const MyApp_penelitian());
+  runApp(const MyApp_penelitian(kodeDosen: ''));
 }
 
 class MyApp_penelitian extends StatelessWidget {
-  const MyApp_penelitian({Key? key}) : super(key: key);
+  final String kodeDosen;
+  const MyApp_penelitian({Key? key, required this.kodeDosen}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Lecturo Penelitian',
       theme: ThemeData(fontFamily: 'Outfit'),
-      home: const MyHomePage(title: 'Lecturo Penelitian'),
+      home: MyHomePage(title: 'Lecturo Penelitian', kodeDosen: kodeDosen),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
+  const MyHomePage({Key? key, required this.title, required this.kodeDosen})
+    : super(key: key);
   final String title;
+  final String kodeDosen;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final List<Map<String, dynamic>> data = [
-    {
-      "title": "Klasifikasi Wine menggunakan K-Nearest Neighbors",
-      "category": "Artificial Intelligence",
-      "date": "7 Maret 2025",
-    },
-    {
-      "title": "Klasifikasi Cuaca menggunakan Rainforcement",
-      "category": "Machine Learning",
-      "date": "24 September 2025",
-    },
-  ];
+  List<Map<String, dynamic>> penelitian = [];
+  final Dio _dio = Dio();
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchKodePenelitian();
+  }
+
+  Future<void> fetchKodePenelitian() async {
+    try {
+      final response = await _dio.post(
+        "http://10.0.2.2/lecturo/getPenelitian.php",
+        data: {"kode": widget.kodeDosen},
+      );
+
+      final data = response.data;
+      if (data["success"]) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("penelitian", jsonEncode(data["penelitian"]));
+
+        if (!mounted) return;
+        setState(() {
+          penelitian = List<Map<String, dynamic>>.from(data["penelitian"]);
+        });
+      } else {
+        if (!mounted) return;
+        setState(() {
+          errorMessage = data["message"];
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        errorMessage = "Kode atau password Anda salah!";
+      });
+    }
+  }
+
+  List<Map<String, dynamic>> get data => penelitian;
 
   final judulInput = TextEditingController();
   final bidangInput = TextEditingController();
@@ -258,7 +293,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             children: [
                               // Judul
                               Text(
-                                research["title"] ?? "",
+                                research["nama"] ?? "",
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -269,7 +304,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
                               // Kategori
                               Text(
-                                research["category"] ?? "",
+                                research["bidang"] ?? "",
                                 style: TextStyle(
                                   fontWeight: FontWeight.w500,
                                   color: Colors.black87, // Kontras lebih baik
@@ -279,7 +314,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
                               // Tanggal
                               Text(
-                                "Tanggal: ${research["date"] ?? ""}",
+                                "Tanggal: ${research["tanggal"] ?? ""}",
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Color(0xFF3C4945),
@@ -314,8 +349,11 @@ class _MyHomePageState extends State<MyHomePage> {
                                         context,
                                         MaterialPageRoute(
                                           builder:
-                                              (context) =>
-                                                  MyApp_viewPenelitian(),
+                                              (context) => MyApp_viewPenelitian(
+                                                kodeDosen: widget.kodeDosen,
+                                                kodePenelitian:
+                                                    research["kode"],
+                                              ),
                                         ),
                                       );
                                     },

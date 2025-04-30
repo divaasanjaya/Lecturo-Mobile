@@ -1,52 +1,82 @@
 import 'package:flutter/material.dart';
 import 'viewCourse.dart';
+import 'dart:convert';
+import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  runApp(const MyApp_course());
+  runApp(const MyApp_course(kodePengampu: ''));
 }
 
 class MyApp_course extends StatelessWidget {
-  const MyApp_course({Key? key}) : super(key: key);
+  final String kodePengampu;
+  const MyApp_course({Key? key, required this.kodePengampu}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Lecturo Mata Kuliah',
       theme: ThemeData(fontFamily: 'Outfit'),
-      home: const MyHomePage(title: 'Lecturo Mata Kuliah'),
+      home: MyHomePage(
+        title: 'Lecturo Mata Kuliah',
+        kodePengampu: kodePengampu,
+      ),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
+  const MyHomePage({Key? key, required this.title, required this.kodePengampu})
+    : super(key: key);
   final String title;
+  final String kodePengampu;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final List<Map<String, dynamic>> data = [
-    {
-      "kode": "CAK3BAB7",
-      "title": "PEMROGRAMAN BERORIENTASI OBJEK",
-      "kelas": "IF-46-06",
-      "sks": "4",
-    },
-    {
-      "kode": "CAK2BAF7",
-      "title": "APLIKASI BERBASIS PLATFORM",
-      "kelas": "IF-46-06",
-      "sks": "3",
-    },
-    {
-      "kode": "CBK3BKF7",
-      "title": "PEMBELAJARAN MESIN",
-      "kelas": "IF-46-06",
-      "sks": "3",
-    },
-  ];
+  List<Map<String, dynamic>> course = [];
+  final Dio _dio = Dio();
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchKodeCourse();
+  }
+
+  Future<void> fetchKodeCourse() async {
+    try {
+      final response = await _dio.post(
+        "http://10.0.2.2/lecturo/getCourse.php",
+        data: {"kode": widget.kodePengampu},
+      );
+
+      final data = response.data;
+      if (data["success"]) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("course", jsonEncode(data["course"]));
+
+        if (!mounted) return;
+        setState(() {
+          course = List<Map<String, dynamic>>.from(data["course"]);
+        });
+      } else {
+        if (!mounted) return;
+        setState(() {
+          errorMessage = data["message"];
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        errorMessage = "Kode atau password Anda salah!";
+      });
+    }
+  }
+
+  List<Map<String, dynamic>> get data => course;
 
   final kodeInput = TextEditingController();
   final namaInput = TextEditingController();
@@ -249,7 +279,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                research["kode"] ?? "",
+                                research["kodeMatkul"] ?? "",
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -258,7 +288,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               ),
                               SizedBox(height: 4),
                               Text(
-                                research["title"] ?? "",
+                                research["nama"] ?? "",
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -267,7 +297,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               ),
                               SizedBox(height: 4),
                               Text(
-                                research["kelas"] ?? "",
+                                research["kodeKelas"] ?? "",
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Color(0xFF3C4945),
@@ -309,7 +339,13 @@ class _MyHomePageState extends State<MyHomePage> {
                                         context,
                                         MaterialPageRoute(
                                           builder:
-                                              (context) => MyApp_viewCourse(),
+                                              (context) => MyApp_viewCourse(
+                                                kodeDosen: widget.kodePengampu,
+                                                kodeMatkul:
+                                                    research["kodeMatkul"],
+                                                kodeKelas:
+                                                    research["kodeKelas"],
+                                              ),
                                         ),
                                       );
                                     },

@@ -45,7 +45,9 @@ class _NilaiPageState extends State<NilaiPage> {
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => MyApp_course()),
+              MaterialPageRoute(
+                builder: (context) => MyApp_course(kodePengampu: ''),
+              ),
             );
           },
         ),
@@ -110,7 +112,12 @@ class _NilaiPageState extends State<NilaiPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => MyApp_viewCourse(),
+                            builder:
+                                (context) => MyApp_viewCourse(
+                                  kodeDosen: '',
+                                  kodeMatkul: '',
+                                  kodeKelas: '',
+                                ),
                           ),
                         );
                       } else if (newValue == 'Mahasiswa') {

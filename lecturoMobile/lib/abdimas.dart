@@ -1,36 +1,79 @@
 import 'package:flutter/material.dart';
 import 'viewAbdimas.dart';
+import 'dart:convert';
+import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  runApp(const MyApp_abdimas());
+  runApp(const MyApp_abdimas(kodeDosen: ''));
 }
 
 class MyApp_abdimas extends StatelessWidget {
-  const MyApp_abdimas({Key? key}) : super(key: key);
+  final String kodeDosen;
+  const MyApp_abdimas({Key? key, required this.kodeDosen}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Lecturo Abdimas',
       theme: ThemeData(fontFamily: 'Outfit'),
-      home: const MyHomePage(title: 'Lecturo Abdimas'),
+      home: MyHomePage(title: 'Lecturo Abdimas', kodeDosen: kodeDosen),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
+  const MyHomePage({Key? key, required this.title, required this.kodeDosen})
+    : super(key: key);
   final String title;
+  final String kodeDosen;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final List<Map<String, dynamic>> data = [
-    {"title": "Bimbingan Belajar untuk Siswa SD", "date": "20 Desember 2024"},
-    {"title": "Community Service Learning 2024", "date": "15 Oktober 2024"},
-  ];
+  List<Map<String, dynamic>> abdimas = [];
+  final Dio _dio = Dio();
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchKodeAbdimas();
+  }
+
+  Future<void> fetchKodeAbdimas() async {
+    try {
+      final response = await _dio.post(
+        "http://10.0.2.2/lecturo/getAbdimas.php",
+        data: {"kode": widget.kodeDosen},
+      );
+
+      final data = response.data;
+      if (data["success"]) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("abdimas", jsonEncode(data["abdimas"]));
+
+        if (!mounted) return;
+        setState(() {
+          abdimas = List<Map<String, dynamic>>.from(data["abdimas"]);
+        });
+      } else {
+        if (!mounted) return;
+        setState(() {
+          errorMessage = data["message"];
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        errorMessage = "Kode atau password Anda salah!";
+      });
+    }
+  }
+
+  List<Map<String, dynamic>> get data => abdimas;
 
   final judulInput = TextEditingController();
   final deskripsiInput = TextEditingController();
@@ -248,7 +291,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             children: [
                               // Judul
                               Text(
-                                research["title"] ?? "",
+                                research["nama"] ?? "",
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -258,7 +301,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               SizedBox(height: 4),
                               // Tanggal
                               Text(
-                                "Tanggal: ${research["date"] ?? ""}",
+                                "Tanggal: ${research["tanggal"] ?? ""}",
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Color(0xFF3C4945),
@@ -293,9 +336,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                         MaterialPageRoute(
                                           builder:
                                               (context) => MyApp_viewAbdimas(
-                                                title: research["title"] ?? "",
-                                                date: research["date"] ?? "",
-                                                desc: research["desc"] ?? "",
+                                                kodeDosen: widget.kodeDosen,
+                                                kodeAbdimas: research["kode"],
                                               ),
                                         ),
                                       );

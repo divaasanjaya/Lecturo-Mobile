@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'abdimas.dart';
+import 'dart:convert';
+import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  runApp(const MyApp_viewAbdimas(title: '', date: '', desc: ''));
+  runApp(const MyApp_viewAbdimas(kodeDosen: '', kodeAbdimas: 0));
 }
 
 class MyApp_viewAbdimas extends StatelessWidget {
-  final String title;
-  final String date;
-  final String desc;
+  final String kodeDosen;
+  final int kodeAbdimas;
 
   const MyApp_viewAbdimas({
     Key? key,
-    required this.title,
-    required this.date,
-    required this.desc,
+    required this.kodeDosen,
+    required this.kodeAbdimas,
   }) : super(key: key);
 
   @override
@@ -22,13 +23,96 @@ class MyApp_viewAbdimas extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(fontFamily: 'Outfit'),
-      home: const LectureScreen(),
+      home: LectureScreen(kodeDosen: kodeDosen, kodeAbdimas: kodeAbdimas),
     );
   }
 }
 
-class LectureScreen extends StatelessWidget {
-  const LectureScreen({super.key});
+class LectureScreen extends StatefulWidget {
+  LectureScreen({Key? key, required this.kodeDosen, required this.kodeAbdimas})
+    : super(key: key);
+  final String kodeDosen;
+  final int kodeAbdimas;
+
+  @override
+  _LectureScreenState createState() => _LectureScreenState();
+}
+
+class _LectureScreenState extends State<LectureScreen> {
+  final Dio _dio = Dio();
+  String? errorMessage;
+  String namaAbdimas = '';
+  String namaDosen = '';
+  String kodeDosen = '';
+  String tanggal = '';
+  String deskripsi = '';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchKodeAbdimas();
+    fetchKodeDosen();
+  }
+
+  Future<void> fetchKodeDosen() async {
+    try {
+      final response = await _dio.post(
+        "http://10.0.2.2/lecturo/getDosen.php",
+        data: {"kode": widget.kodeDosen},
+      );
+
+      final data = response.data;
+      if (data["success"]) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("dosen", jsonEncode(data["dosen"]));
+
+        if (!mounted) return;
+        setState(() {
+          namaDosen = data["dosen"]["nama"];
+          kodeDosen = data["dosen"]["kode"];
+        });
+      } else {
+        if (!mounted) return;
+        setState(() {
+          errorMessage = data["message"];
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        errorMessage = "Kode atau password Anda salah!";
+      });
+    }
+  }
+
+  Future<void> fetchKodeAbdimas() async {
+    try {
+      final response = await _dio.post(
+        "http://10.0.2.2/lecturo/getInfoAbdimas.php",
+        data: {"kode": widget.kodeAbdimas},
+      );
+
+      final data = response.data;
+      if (data["success"]) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("abdimas", jsonEncode(data["abdimas"]));
+
+        setState(() {
+          namaAbdimas = data["abdimas"]["nama"];
+          tanggal = data["abdimas"]["tanggal"];
+          deskripsi = data["abdimas"]["deskripsi"];
+        });
+      } else {
+        setState(() {
+          errorMessage = data["message"];
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = "Kode atau password Anda salah!";
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +126,10 @@ class LectureScreen extends StatelessWidget {
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => MyApp_abdimas()),
+              MaterialPageRoute(
+                builder:
+                    (context) => MyApp_abdimas(kodeDosen: widget.kodeDosen),
+              ),
             );
           },
         ),
@@ -86,7 +173,7 @@ class LectureScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Judul Abdimas",
+                            namaAbdimas,
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -95,12 +182,12 @@ class LectureScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            "Tanggal Abdimas",
+                            tanggal,
                             style: TextStyle(fontSize: 14, color: Colors.black),
                           ),
                           const SizedBox(height: 30),
                           Text(
-                            "Dosen pembimbing : Nama Dosen [Kode Dosen]",
+                            "Dosen pembimbing : ${namaDosen} [${kodeDosen}]",
                             style: TextStyle(fontSize: 16, color: Colors.black),
                           ),
                         ],
@@ -134,7 +221,7 @@ class LectureScreen extends StatelessWidget {
                           const Divider(color: Colors.black54, thickness: 1),
                           const SizedBox(height: 8),
                           Text(
-                            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+                            deskripsi,
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.black87,
