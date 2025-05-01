@@ -36,11 +36,50 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Map<String, dynamic>> abdimas = [];
   final Dio _dio = Dio();
   String? errorMessage;
+  String? menu;
+  int? kodeAbdimas;
 
   @override
   void initState() {
     super.initState();
     fetchKodeAbdimas();
+  }
+
+  Future<void> delAbdimas() async {
+    try {
+      final response = await _dio.post(
+        "http://10.0.2.2/lecturo/delAbdimas.php",
+        data: {"kodeDosen": widget.kodeDosen, "kodeAbdimas": kodeAbdimas},
+      );
+      print(response.data);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        errorMessage = "Kode atau password Anda salah!";
+      });
+    }
+  }
+
+  Future<void> updateAbdimas() async {
+    try {
+      final response = await _dio.post(
+        "http://10.0.2.2/lecturo/updaddAbdimas.php",
+        data: {
+          "kodeDosen": widget.kodeDosen,
+          "menu": menu,
+          "kode": kodeAbdimas,
+          "nama": judulInput.text,
+          "deskripsi": deskripsiInput.text,
+          "tanggal": tanggalInput.text,
+        },
+      );
+      print(response.data);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        errorMessage = "Kode atau password Anda salah!";
+      });
+    }
   }
 
   Future<void> fetchKodeAbdimas() async {
@@ -367,7 +406,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                           onPressed: () {
                                             _showTambahDialog(
                                               initialData: data[index],
-                                              index: index,
+                                              kodeAbdimas: research["kode"],
                                             );
                                           },
                                         ),
@@ -382,8 +421,11 @@ class _MyHomePageState extends State<MyHomePage> {
                                           ),
                                           padding: EdgeInsets.zero,
                                           constraints: BoxConstraints(),
-                                          onPressed: () {
-                                            // Aksi hapus
+                                          onPressed: () async {
+                                            kodeAbdimas = research["kode"];
+                                            await delAbdimas();
+                                            await fetchKodeAbdimas();
+                                            setState(() {});
                                           },
                                         ),
                                       ),
@@ -406,13 +448,17 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void _showTambahDialog({Map<String, dynamic>? initialData, int? index}) {
+  void _showTambahDialog({
+    Map<String, dynamic>? initialData,
+    int? kodeAbdimas,
+  }) {
+    this.kodeAbdimas = kodeAbdimas;
     // Reset atau isi form tergantung mode
     if (initialData != null) {
       // Mode edit
-      judulInput.text = initialData['title'] ?? '';
-      deskripsiInput.text = initialData['description'] ?? '';
-      tanggalInput.text = initialData['date'] ?? '';
+      judulInput.text = initialData['nama'] ?? '';
+      deskripsiInput.text = initialData['deskripsi'] ?? '';
+      tanggalInput.text = initialData['tanggal'] ?? '';
     } else {
       // Mode tambah - kosongkan semua input
       judulInput.clear();
@@ -496,7 +542,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   );
                                   if (pickedDate != null) {
                                     final formattedDate =
-                                        "${pickedDate.day} ${bulan[pickedDate.month]} ${pickedDate.year}";
+                                        "${pickedDate.year}-${pickedDate.month}-${pickedDate.day}";
                                     setState(() {
                                       tanggalInput.text = formattedDate;
                                     });
@@ -521,25 +567,23 @@ class _MyHomePageState extends State<MyHomePage> {
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    if (initialData != null && index != null) {
-                                      data[index] = {
-                                        'title': judulInput.text,
-                                        'description': deskripsiInput,
-                                        'date': tanggalInput.text,
-                                      };
-                                    } else {
-                                      data.add({
-                                        'title': judulInput.text,
-                                        'description': deskripsiInput.text,
-                                        'date': tanggalInput.text,
-                                      });
-                                    }
-                                    judulInput.clear();
-                                    deskripsiInput.clear();
-                                    tanggalInput.clear();
-                                  });
+                                onPressed: () async {
+                                  if (initialData != null && kodeAbdimas != 0) {
+                                    menu = "upd";
+                                    await updateAbdimas();
+                                    await fetchKodeAbdimas();
+                                    setState(() {});
+                                  } else {
+                                    menu = "add";
+                                    kodeAbdimas = 0;
+                                    await updateAbdimas();
+                                    await fetchKodeAbdimas();
+                                    setState(() {});
+                                  }
+                                  judulInput.clear();
+                                  deskripsiInput.clear();
+                                  tanggalInput.clear();
+
                                   Navigator.of(context).pop();
                                 },
                                 style: ElevatedButton.styleFrom(

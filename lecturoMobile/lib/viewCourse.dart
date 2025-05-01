@@ -64,6 +64,10 @@ class _LectureScreenState extends State<LectureScreen> {
   String kodeMatkul = '';
   String kodeDosenKoor = '';
   String namaDosenKoor = '';
+  String kontak = '';
+  String email = '';
+
+  late TapGestureRecognizer _tapRecognizer;
 
   @override
   void initState() {
@@ -71,6 +75,25 @@ class _LectureScreenState extends State<LectureScreen> {
     fetchKodeCourse();
     fetchKodeDosen();
     fetchDosenKoor();
+    _tapRecognizer =
+        TapGestureRecognizer()
+          ..onTap = () {
+            _showDosenDialog(
+              context,
+              kodeDosenKoor: kodeDosenKoor,
+              namaDosenKoor: namaDosenKoor,
+              email: email,
+              kontak: kontak,
+              namaCourse: namaCourse,
+              kodeMatkul: kodeMatkul,
+            );
+          };
+  }
+
+  @override
+  void dispose() {
+    _tapRecognizer.dispose(); // Hindari memory leak & error gesture
+    super.dispose();
   }
 
   Future<void> fetchDosenKoor() async {
@@ -87,6 +110,8 @@ class _LectureScreenState extends State<LectureScreen> {
 
         setState(() {
           kodeDosenKoor = data["dosenkoor"]["kodeDosen"];
+          kontak = data["dosenkoor"]["kontakKoor"];
+          email = data["dosenkoor"]["email"];
         });
       } else {
         setState(() {
@@ -368,100 +393,93 @@ class _LectureScreenState extends State<LectureScreen> {
     );
   }
 
-  void _showDosenDialog(BuildContext context) {
+  void _showDosenDialog(
+    BuildContext context, {
+    String? kodeDosenKoor,
+    String? namaDosenKoor,
+    String? email,
+    String? kontak,
+    String? namaCourse,
+    String? kodeMatkul,
+  }) {
     showDialog(
       context: context,
-      builder:
-          (_) => AlertDialog(
-            backgroundColor: Colors.white,
-            title: Text(
-              'Informasi Dosen Koordinator',
-              style: TextStyle(
-                fontSize: 16, // Atur ukuran font
-                fontWeight: FontWeight.bold, // Atur ketebalan
-                color: Colors.black, // Opsional: atur warna
+      barrierDismissible: true,
+      builder: (BuildContext dialogContext) {
+        // <- gunakan dialogContext
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text(
+            'Informasi Dosen Koordinator',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Divider(thickness: 2),
+              SizedBox(height: 2),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Kode: $kodeDosenKoor',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
               ),
-            ),
-
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Divider(thickness: 2),
-                SizedBox(height: 2),
-                Align(
-                  alignment: Alignment.centerLeft, // Membuat teks rata kiri
-                  child: Text(
-                    'Kode: Kode Dosen',
-                    style: TextStyle(
-                      fontWeight:
-                          FontWeight
-                              .bold, // atau FontWeight.w600, FontWeight.w500, dll
-                      fontSize: 14, // opsional: atur ukuran juga kalau perlu
-                    ),
-                  ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Nama: $namaDosenKoor',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
-                SizedBox(height: 0),
-                Align(
-                  alignment: Alignment.centerLeft, // Membuat teks rata kiri
-                  child: Text(
-                    'Nama: Nama Dosen',
-                    style: TextStyle(
-                      fontWeight:
-                          FontWeight
-                              .bold, // atau FontWeight.w600, FontWeight.w500, dll
-                      fontSize: 14, // opsional: atur ukuran juga kalau perlu
-                    ),
-                  ),
-                ),
-                SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerLeft, // Membuat teks rata kiri
-                  child: Text('Email: Email Dosen'),
-                ),
-                SizedBox(height: 0),
-                Align(
-                  alignment: Alignment.centerLeft, // Membuat teks rata kiri
-                  child: Text('Nomor Telepon: No. Telp Dosen'),
-                ),
-                SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerLeft, // Membuat teks rata kiri
-                  child: Text(
-                    'Koordinator Mata Kuliah: NAMA MATA KULIAH [KODE MATA KULIAH]',
-                    style: TextStyle(
-                      fontWeight:
-                          FontWeight
-                              .bold, // atau FontWeight.w600, FontWeight.w500, dll
-                      fontSize: 14, // opsional: atur ukuran juga kalau perlu
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF004643),
-                  minimumSize: const Size.fromHeight(40),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                      6,
-                    ), // sudut tidak terlalu lonjong
-                  ),
-                ),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text(
-                  'Tutup',
-                  style: TextStyle(
-                    color: const Color(0xFFF9BC60),
-                    fontWeight: FontWeight.bold,
-                  ),
+              ),
+              SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Email: $email'),
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Nomor Telepon: $kontak'),
+              ),
+              SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Koordinator Mata Kuliah: $namaCourse [$kodeMatkul]',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
               ),
             ],
           ),
+          actions: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF004643),
+                minimumSize: const Size.fromHeight(40),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(
+                  dialogContext,
+                ).pop(); // <- gunakan context dari dialog
+              },
+              child: const Text(
+                'Tutup',
+                style: TextStyle(
+                  color: Color(0xFFF9BC60),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -633,11 +651,7 @@ class _LectureScreenState extends State<LectureScreen> {
                                     color: Colors.black,
                                     decoration: TextDecoration.underline,
                                   ),
-                                  recognizer:
-                                      TapGestureRecognizer()
-                                        ..onTap = () {
-                                          _showDosenDialog(context);
-                                        },
+                                  recognizer: _tapRecognizer,
                                 ),
                               ],
                             ),

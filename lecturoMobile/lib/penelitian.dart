@@ -36,11 +36,52 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Map<String, dynamic>> penelitian = [];
   final Dio _dio = Dio();
   String? errorMessage;
+  int? kodePenelitian;
+  String? menu;
 
   @override
   void initState() {
     super.initState();
     fetchKodePenelitian();
+  }
+
+  Future<void> delPenelitian() async {
+    try {
+      final response = await _dio.post(
+        "http://10.0.2.2/lecturo/delPenelitian.php",
+        data: {"kodeDosen": widget.kodeDosen, "kodePenelitian": kodePenelitian},
+      );
+      print(response.data);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        errorMessage = "Kode atau password Anda salah!";
+      });
+    }
+  }
+
+  Future<void> updatePenelitian() async {
+    try {
+      final response = await _dio.post(
+        "http://10.0.2.2/lecturo/updaddPenelitian.php",
+        data: {
+          "kodeDosen": widget.kodeDosen,
+          "menu": menu,
+          "kode": kodePenelitian,
+          "nama": judulInput.text,
+          "bidang": bidangInput.text,
+          "deskripsi": deskripsiInput.text,
+          "tanggal": tanggalInput.text,
+          "tautan": urlInput.text,
+        },
+      );
+      print(response.data);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        errorMessage = "Kode atau password Anda salah!";
+      });
+    }
   }
 
   Future<void> fetchKodePenelitian() async {
@@ -382,7 +423,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                           onPressed: () {
                                             _showTambahDialog(
                                               initialData: data[index],
-                                              index: index,
+                                              kodePenelitian: research["kode"],
                                             );
                                           },
                                         ),
@@ -397,8 +438,11 @@ class _MyHomePageState extends State<MyHomePage> {
                                           ),
                                           padding: EdgeInsets.zero,
                                           constraints: BoxConstraints(),
-                                          onPressed: () {
-                                            // Aksi hapus
+                                          onPressed: () async {
+                                            kodePenelitian = research["kode"];
+                                            await delPenelitian();
+                                            await fetchKodePenelitian();
+                                            setState(() {});
                                           },
                                         ),
                                       ),
@@ -421,15 +465,19 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void _showTambahDialog({Map<String, dynamic>? initialData, int? index}) {
+  void _showTambahDialog({
+    Map<String, dynamic>? initialData,
+    int? kodePenelitian,
+  }) {
+    this.kodePenelitian = kodePenelitian;
     // Reset atau isi form tergantung mode
     if (initialData != null) {
       // Mode edit
-      judulInput.text = initialData['title'] ?? '';
-      bidangInput.text = initialData['category'] ?? '';
-      deskripsiInput.text = initialData['description'] ?? '';
-      urlInput.text = initialData['url'] ?? '';
-      tanggalInput.text = initialData['date'] ?? '';
+      judulInput.text = initialData['nama'] ?? '';
+      bidangInput.text = initialData['bidang'] ?? '';
+      deskripsiInput.text = initialData['deskripsi'] ?? '';
+      urlInput.text = initialData['tautan'] ?? '';
+      tanggalInput.text = initialData['tanggal'] ?? '';
     } else {
       // Mode tambah - kosongkan semua input
       judulInput.clear();
@@ -525,7 +573,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   );
                                   if (pickedDate != null) {
                                     final formattedDate =
-                                        "${pickedDate.day} ${bulan[pickedDate.month]} ${pickedDate.year}";
+                                        "${pickedDate.year}-${pickedDate.month}-${pickedDate.day}";
                                     setState(() {
                                       tanggalInput.text = formattedDate;
                                     });
@@ -550,32 +598,27 @@ class _MyHomePageState extends State<MyHomePage> {
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    if (initialData != null && index != null) {
-                                      data[index] = {
-                                        'title': judulInput.text,
-                                        'category': bidangInput.text,
-                                        'description':
-                                            deskripsiInput, // pertahankan
-                                        'url': urlInput, // pertahankan
-                                        'date': tanggalInput.text,
-                                      };
-                                    } else {
-                                      data.add({
-                                        'title': judulInput.text,
-                                        'category': bidangInput.text,
-                                        'description': deskripsiInput.text,
-                                        'url': urlInput.text,
-                                        'date': tanggalInput.text,
-                                      });
-                                    }
-                                    judulInput.clear();
-                                    bidangInput.clear();
-                                    deskripsiInput.clear();
-                                    urlInput.clear();
-                                    tanggalInput.clear();
-                                  });
+                                onPressed: () async {
+                                  if (initialData != null &&
+                                      kodePenelitian != 0) {
+                                    menu = "upd";
+                                    await updatePenelitian();
+                                    await fetchKodePenelitian();
+                                    setState(() {});
+                                  } else {
+                                    menu = "add";
+                                    kodePenelitian = 0;
+                                    await updatePenelitian();
+                                    await fetchKodePenelitian();
+                                    setState(() {});
+                                  }
+
+                                  judulInput.clear();
+                                  bidangInput.clear();
+                                  deskripsiInput.clear();
+                                  urlInput.clear();
+                                  tanggalInput.clear();
+
                                   Navigator.of(context).pop();
                                 },
                                 style: ElevatedButton.styleFrom(
