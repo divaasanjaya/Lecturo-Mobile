@@ -69,12 +69,15 @@ class _LectureScreenState extends State<LectureScreen> {
 
   late TapGestureRecognizer _tapRecognizer;
 
+  late TapGestureRecognizer _tapRecognizer;
+
   @override
   void initState() {
     super.initState();
     fetchKodeCourse();
     fetchKodeDosen();
     fetchDosenKoor();
+<<<<<<< HEAD
     _tapRecognizer =
         TapGestureRecognizer()
           ..onTap = () {
@@ -88,6 +91,11 @@ class _LectureScreenState extends State<LectureScreen> {
               kodeMatkul: kodeMatkul,
             );
           };
+=======
+    _tapRecognizer = TapGestureRecognizer()..onTap = () {
+      _showDosenDialog(context);
+    };
+>>>>>>> 201774fb9173cc67a7b80cd0924ccd7ccfe218f1
   }
 
   @override
@@ -393,6 +401,7 @@ class _LectureScreenState extends State<LectureScreen> {
     );
   }
 
+<<<<<<< HEAD
   void _showDosenDialog(
     BuildContext context, {
     String? kodeDosenKoor,
@@ -482,6 +491,87 @@ class _LectureScreenState extends State<LectureScreen> {
       },
     );
   }
+=======
+  void _showDosenDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (BuildContext dialogContext) { // <- gunakan dialogContext
+      return AlertDialog(
+        backgroundColor: Colors.white,
+        title: Text(
+          'Informasi Dosen Koordinator',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            Divider(thickness: 2),
+            SizedBox(height: 2),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Kode: Kode Dosen',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Nama: Nama Dosen',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+            ),
+            SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text('Email: Email Dosen'),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text('Nomor Telepon: No. Telp Dosen'),
+            ),
+            SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Koordinator Mata Kuliah: NAMA MATA KULIAH [KODE MATA KULIAH]',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF004643),
+              minimumSize: const Size.fromHeight(40),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+            onPressed: () {
+              Navigator.of(dialogContext).pop(); // <- gunakan context dari dialog
+            },
+            child: const Text(
+              'Tutup',
+              style: TextStyle(
+                color: Color(0xFFF9BC60),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+>>>>>>> 201774fb9173cc67a7b80cd0924ccd7ccfe218f1
 
   @override
   Widget build(BuildContext context) {
