@@ -99,7 +99,7 @@ class _LectureScreenState extends State<LectureScreen> {
   Future<void> fetchDosenKoor() async {
     try {
       final response = await _dio.post(
-        "http://10.0.2.2/lecturo/getDosenKoor.php",
+        "http://192.168.100.97/lecturo/getDosenKoor.php",
         data: {"kode": widget.kodeMatkul},
       );
 
@@ -130,7 +130,7 @@ class _LectureScreenState extends State<LectureScreen> {
   Future<void> fetchKodeDosen2() async {
     try {
       final response = await _dio.post(
-        "http://10.0.2.2/lecturo/getDosen.php",
+        "http://192.168.100.97/lecturo/getDosen.php",
         data: {"kode": kodeDosenKoor},
       );
 
@@ -158,7 +158,7 @@ class _LectureScreenState extends State<LectureScreen> {
   Future<void> fetchKodeDosen() async {
     try {
       final response = await _dio.post(
-        "http://10.0.2.2/lecturo/getDosen.php",
+        "http://192.168.100.97/lecturo/getDosen.php",
         data: {"kode": widget.kodeDosen},
       );
 
@@ -186,7 +186,7 @@ class _LectureScreenState extends State<LectureScreen> {
   Future<void> fetchKodeCourse() async {
     try {
       final response = await _dio.post(
-        "http://10.0.2.2/lecturo/getCourse2.php",
+        "http://192.168.100.97/lecturo/getCourse2.php",
         data: {
           "kodeMatkul": widget.kodeMatkul,
           "kodeDosen": widget.kodeDosen,
@@ -220,14 +220,20 @@ class _LectureScreenState extends State<LectureScreen> {
     }
   }
 
-  String _dropdownValue = 'Activity';
   final TextEditingController namaQuizInput = TextEditingController();
   final TextEditingController kodeMatkulInput = TextEditingController();
   final TextEditingController deadlineInput = TextEditingController();
   final TextEditingController kodeKelasInput = TextEditingController();
 
-  List<Map<String, dynamic>> daftarQuiz = [
-    {"quiz": "Class Diagram", "dl": "Tuesday, 31 December 2024, 12:40"},
+  final List<Map<String, String>> quizList = [
+    {
+      'title': 'Quiz 1: Algoritma Dasar',
+      'closed': 'Senin, 5 Mei 2025, 10:00'
+    },
+    {
+      'title': 'Quiz 2: Struktur Data',
+      'closed': 'Rabu, 7 Mei 2025, 13:30'
+    },
   ];
 
   void _showCreateQuizDialog() {
@@ -302,9 +308,9 @@ class _LectureScreenState extends State<LectureScreen> {
                               child: ElevatedButton(
                                 onPressed: () {
                                   setState(() {
-                                    daftarQuiz.add({
-                                      'quiz': namaQuizInput.text,
-                                      'dl': deadlineInput.text,
+                                    quizList.add({
+                                      'title': namaQuizInput.text,
+                                      'closed': deadlineInput.text,
                                     });
                                   });
                                   Navigator.of(context).pop();
@@ -320,7 +326,7 @@ class _LectureScreenState extends State<LectureScreen> {
                                   elevation: 6,
                                   shadowColor: Color(0xFFA9A9A9),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   "Tambah",
                                   style: TextStyle(
                                     fontSize: 22,
@@ -483,6 +489,43 @@ class _LectureScreenState extends State<LectureScreen> {
     );
   }
 
+  Widget _buildMenuButton(String label) {
+    return GestureDetector(
+      onTap: () {
+        if (label == 'Activity') {
+          // Biarkan tetap di halaman ini
+        } else if (label == 'Mahasiswa') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => MyApp_viewMahasiswa()),
+          );
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF9BC60),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              offset: const Offset(2, 2),
+              blurRadius: 4,
+            ),
+          ],
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: Color(0xFF004643),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -505,91 +548,54 @@ class _LectureScreenState extends State<LectureScreen> {
       ),
       body: SafeArea(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header: Lecturo
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.circle,
+                    color: Color(0xFFF9BC60),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    "Lecturo",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.only(left: 16), // Jarak dari sisi kanan
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildMenuButton("Activity"),
+                    const SizedBox(width: 12),
+                    _buildMenuButton("Mahasiswa"),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            // Scrollable content area
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.circle,
-                          color: Color(0xFFF9BC60),
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          "Lecturo",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Dropdown
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF9BC60),
-                        borderRadius: BorderRadius.circular(32),
-                      ),
-                      child: DropdownButton<String>(
-                        value: _dropdownValue,
-                        underline: const SizedBox(),
-                        icon: const Icon(Icons.arrow_drop_down),
-                        borderRadius: BorderRadius.circular(16),
-                        dropdownColor: const Color(0xFFF9BC60),
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF004643),
-                        ),
-                        items:
-                            <String>['Activity', 'Mahasiswa', 'Nilai'].map((
-                              String value,
-                            ) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
-                        onChanged: (String? newValue) {
-                          print('Dropdown value changed: $newValue');
-                          if (newValue != null) {
-                            setState(() {
-                              _dropdownValue = newValue;
-                            });
-                            print('Navigating to page for: $newValue');
-                            if (newValue == 'Activity') {
-                            } else if (newValue == 'Mahasiswa') {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => MyApp_viewMahasiswa(),
-                                ),
-                              );
-                            } else if (newValue == 'Nilai') {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => MyApp_viewNilai(),
-                                ),
-                              );
-                            }
-                          }
-                        },
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Container 1
+                    // === Container 1 ===
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
@@ -608,7 +614,6 @@ class _LectureScreenState extends State<LectureScreen> {
                               color: Colors.black,
                             ),
                           ),
-                          const SizedBox(height: 0),
                           Text(
                             kodeMatkul,
                             style: TextStyle(
@@ -618,24 +623,16 @@ class _LectureScreenState extends State<LectureScreen> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            "Kelas: ${kodeKelas}",
-                            style: TextStyle(fontSize: 12, color: Colors.black),
-                          ),
-                          Text(
-                            "SKS: ${sks}",
-                            style: TextStyle(fontSize: 12, color: Colors.black),
-                          ),
+                          Text("Kelas: $kodeKelas", style: TextStyle(fontSize: 12)),
+                          Text("SKS: $sks", style: TextStyle(fontSize: 12)),
                           const SizedBox(height: 16),
                           Text(
-                            "Dosen Pengampu: ${namaDosen} [${kodeDosen}]",
+                            "Dosen Pengampu: $namaDosen [$kodeDosen]",
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: Colors.black,
                             ),
                           ),
-                          const SizedBox(height: 0),
                           RichText(
                             text: TextSpan(
                               style: TextStyle(
@@ -648,7 +645,6 @@ class _LectureScreenState extends State<LectureScreen> {
                                 TextSpan(
                                   text: '$namaDosenKoor [$kodeDosenKoor]',
                                   style: const TextStyle(
-                                    color: Colors.black,
                                     decoration: TextDecoration.underline,
                                   ),
                                   recognizer: _tapRecognizer,
@@ -662,7 +658,7 @@ class _LectureScreenState extends State<LectureScreen> {
 
                     const SizedBox(height: 24),
 
-                    // Tombol Create Quiz
+                    // === Tombol Create Quiz ===
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFF9BC60),
@@ -670,76 +666,84 @@ class _LectureScreenState extends State<LectureScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      onPressed: () {
-                        _showCreateQuizDialog();
-                      },
-                      child: Text(
+                      onPressed: _showCreateQuizDialog,
+                      child: const Text(
                         'Create Quiz',
                         style: TextStyle(
                           fontSize: 14,
-                          fontWeight: FontWeight.bold, // atur ketebalan
-                          color: const Color(0xFF004643), // atur warna
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF004643),
                         ),
                       ),
                     ),
 
                     const SizedBox(height: 12),
 
-                    // Container 2
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFABD1C6),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Stack(
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.assignment,
-                                    color: Color(0xFF004643),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    "Quiz 1: Nama Quiz",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black87,
+                    // === ListView builder for Quiz ===
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: quizList.length,
+                      itemBuilder: (context, index) {
+                        final quiz = quizList[index];
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MyApp_viewNilai(),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFABD1C6),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Stack(
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.assignment, color: Color(0xFF004643)),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          quiz['title'] ?? '',
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const Divider(
-                                color: Colors.black54,
-                                thickness: 1,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                "Closed : Hari, Tanggal Bulan Tahun, Jam",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.black87,
+                                    const Divider(color: Colors.black54, thickness: 1),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          "Closed : ${quiz['closed']}",
+                                          style: const TextStyle(fontSize: 14, color: Colors.black87),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete, color: Colors.black),
+                                          onPressed: () {
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              const SizedBox(height: 32),
-                            ],
+                              ],
+                            ),
                           ),
-                          const Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Icon(Icons.delete, color: Colors.black),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
+                        );
+                      },
+                    )
                   ],
                 ),
               ),
