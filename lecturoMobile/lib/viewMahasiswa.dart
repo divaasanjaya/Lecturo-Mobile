@@ -1,343 +1,165 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
-import 'viewMahasiswa.dart';
-import 'viewNilai.dart';
+import 'viewCourse.dart';
 import 'course.dart';
-import 'dart:convert';
-import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  runApp(const MyApp_viewCourse(kodeDosen: '', kodeMatkul: '', kodeKelas: ''));
+  runApp(const MyApp_viewMahasiswa());
 }
 
-class MyApp_viewCourse extends StatelessWidget {
-  final String kodeDosen;
-  final String kodeMatkul;
-  final String kodeKelas;
-
-  const MyApp_viewCourse({
-    Key? key,
-    required this.kodeDosen,
-    required this.kodeMatkul,
-    required this.kodeKelas,
-  }) : super(key: key);
+class MyApp_viewMahasiswa extends StatelessWidget {
+  const MyApp_viewMahasiswa({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(fontFamily: 'Outfit'),
-      home: LectureScreen(
-        kodeDosen: kodeDosen,
-        kodeMatkul: kodeMatkul,
-        kodeKelas: kodeKelas,
+      title: 'Lecturo',
+      theme: ThemeData(
+        fontFamily: 'Outfit',
+        scaffoldBackgroundColor: const Color(0xFF004643),
       ),
+      home: const HomePage(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
 
-class LectureScreen extends StatefulWidget {
-  LectureScreen({
-    Key? key,
-    required this.kodeDosen,
-    required this.kodeMatkul,
-    required this.kodeKelas,
-  }) : super(key: key);
-
-  final String kodeDosen;
-  final String kodeMatkul;
-  final String kodeKelas;
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
   @override
-  State<LectureScreen> createState() => _LectureScreenState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _LectureScreenState extends State<LectureScreen> {
-  final Dio _dio = Dio();
-  String? errorMessage;
-  String namaDosen = '';
-  String kodeDosen = '';
-  String namaCourse = '';
-  String kodeKelas = '';
-  int sks = 0;
-  String kodeMatkul = '';
-  String kodeDosenKoor = '';
-  String namaDosenKoor = '';
-  String kontak = '';
-  String email = '';
+class _HomePageState extends State<HomePage> {
+  final TextEditingController _nimController = TextEditingController();
+  final TextEditingController _namaController = TextEditingController();
+  final TextEditingController _kelasController = TextEditingController(
+    text: 'IF-46-06',
+  );
 
-  late TapGestureRecognizer _tapRecognizer;
-
-  @override
-  void initState() {
-    super.initState();
-    fetchKodeCourse();
-    fetchKodeDosen();
-    fetchDosenKoor();
-    _tapRecognizer =
-        TapGestureRecognizer()
-          ..onTap = () {
-            _showDosenDialog(
-              context,
-              kodeDosenKoor: kodeDosenKoor,
-              namaDosenKoor: namaDosenKoor,
-              email: email,
-              kontak: kontak,
-              namaCourse: namaCourse,
-              kodeMatkul: kodeMatkul,
-            );
-          };
-  }
-
-  @override
-  void dispose() {
-    _tapRecognizer.dispose(); // Hindari memory leak & error gesture
-    super.dispose();
-  }
-
-  Future<void> fetchDosenKoor() async {
-    try {
-      final response = await _dio.post(
-        "http://10.0.2.2/lecturo/getDosenKoor.php",
-        data: {"kode": widget.kodeMatkul},
-      );
-
-      final data = response.data;
-      if (data["success"]) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString("dosenkoor", jsonEncode(data["dosenkoor"]));
-
-        setState(() {
-          kodeDosenKoor = data["dosenkoor"]["kodeDosen"];
-          kontak = data["dosenkoor"]["kontakKoor"];
-          email = data["dosenkoor"]["email"];
-        });
-      } else {
-        setState(() {
-          errorMessage = data["message"];
-        });
-      }
-    } catch (e) {
-      setState(() {
-        errorMessage = "Kode atau password Anda salah!";
-      });
-    }
-
-    fetchKodeDosen2();
-  }
-
-  Future<void> fetchKodeDosen2() async {
-    try {
-      final response = await _dio.post(
-        "http://10.0.2.2/lecturo/getDosen.php",
-        data: {"kode": kodeDosenKoor},
-      );
-
-      final data = response.data;
-      if (data["success"]) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString("dosen", jsonEncode(data["dosen"]));
-
-        setState(() {
-          namaDosenKoor = data["dosen"]["nama"];
-          kodeDosenKoor = data["dosen"]["kode"];
-        });
-      } else {
-        setState(() {
-          errorMessage = data["message"];
-        });
-      }
-    } catch (e) {
-      setState(() {
-        errorMessage = "Kode atau password Anda salah!";
-      });
-    }
-  }
-
-  Future<void> fetchKodeDosen() async {
-    try {
-      final response = await _dio.post(
-        "http://10.0.2.2/lecturo/getDosen.php",
-        data: {"kode": widget.kodeDosen},
-      );
-
-      final data = response.data;
-      if (data["success"]) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString("dosen", jsonEncode(data["dosen"]));
-
-        setState(() {
-          namaDosen = data["dosen"]["nama"];
-          kodeDosen = data["dosen"]["kode"];
-        });
-      } else {
-        setState(() {
-          errorMessage = data["message"];
-        });
-      }
-    } catch (e) {
-      setState(() {
-        errorMessage = "Kode atau password Anda salah!";
-      });
-    }
-  }
-
-  Future<void> fetchKodeCourse() async {
-    try {
-      final response = await _dio.post(
-        "http://10.0.2.2/lecturo/getCourse2.php",
-        data: {
-          "kodeMatkul": widget.kodeMatkul,
-          "kodeDosen": widget.kodeDosen,
-          "kodeKelas": widget.kodeKelas,
-        },
-      );
-
-      final data = response.data;
-      if (data["success"]) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString("course", jsonEncode(data["course"]));
-
-        if (!mounted) return;
-        setState(() {
-          namaCourse = data["course"]["nama"];
-          kodeKelas = data["course"]["kodeKelas"];
-          kodeMatkul = data["course"]["kodeMatkul"];
-          sks = data["course"]["sks"];
-        });
-      } else {
-        if (!mounted) return;
-        setState(() {
-          errorMessage = data["message"];
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        errorMessage = "Kode atau password Anda salah!";
-      });
-    }
-  }
-
-  final TextEditingController namaQuizInput = TextEditingController();
-  final TextEditingController kodeMatkulInput = TextEditingController();
-  final TextEditingController deadlineInput = TextEditingController();
-  final TextEditingController kodeKelasInput = TextEditingController();
-
-  final List<Map<String, String>> quizList = [
-    {
-      'title': 'Quiz 1: Algoritma Dasar',
-      'closed': 'Senin, 5 Mei 2025, 10:00'
-    },
-    {
-      'title': 'Quiz 2: Struktur Data',
-      'closed': 'Rabu, 7 Mei 2025, 13:30'
-    },
+  final List<Map<String, String>> mahasiswaList = [
+    {"nim": "1301223248", "nama": "Muthia Rihadatul A", "kelas": "IF-46-06"},
+    {"nim": "1301223249", "nama": "Nasywa Alif Widya", "kelas": "IF-46-06"},
+    {"nim": "1301223250", "nama": "Achmad Rafly K Z", "kelas": "IF-46-06"},
+    {"nim": "1301223251", "nama": "Farah Saraswati", "kelas": "IF-46-06"},
+    {"nim": "1301223252", "nama": "Azra Feby Awfiyah", "kelas": "IF-46-06"},
+    {"nim": "1301223253", "nama": "Diva Sanjaya W", "kelas": "IF-46-06"},
   ];
-
-  void _showCreateQuizDialog() {
-    // Kosongkan form setiap kali dialog dibuka
-    namaQuizInput.clear();
-    kodeMatkulInput.clear();
-    deadlineInput.clear();
-    kodeKelasInput.clear();
-
+  void showAddMahasiswaDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.all(16),
+          backgroundColor: const Color(0xFFABD1C6), // hijau muda
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Center(
-                      child: Container(
-                        width: MediaQuery.of(context).size.width * 0.9,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFABD1C6),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Color(0xFF2A2A2A),
-                              offset: Offset(0, 4),
-                              blurRadius: 8,
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "Create Quiz",
-                              style: TextStyle(
-                                fontSize: 23,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF004643),
-                              ),
-                            ),
-                            const SizedBox(height: 13),
-                            _buildTextField(
-                              "Nama Quiz",
-                              "Masukkan nama quiz",
-                              namaQuizInput,
-                            ),
-                            _buildTextField(
-                              "Kode Mata Kuliah",
-                              "Masukkan kode matkul",
-                              kodeMatkulInput,
-                            ),
-                            _buildTextField(
-                              "Deadline",
-                              "Masukkan deadline quiz",
-                              deadlineInput,
-                            ),
-                            _buildTextField(
-                              "Kode Kelas",
-                              "Masukkan kode kelas",
-                              kodeKelasInput,
-                            ),
-                            const SizedBox(height: 24),
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    quizList.add({
-                                      'title': namaQuizInput.text,
-                                      'closed': deadlineInput.text,
-                                    });
-                                  });
-                                  Navigator.of(context).pop();
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFF9BC60),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 10,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(5),
-                                  ),
-                                  elevation: 6,
-                                  shadowColor: Color(0xFFA9A9A9),
-                                ),
-                                child: Text(
-                                  "Tambah",
-                                  style: TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF001E1D),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                const Text(
+                  'Create Mahasiswa',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF004643), // hijau tua
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // NIM
+                Material(
+                  elevation: 2,
+                  shadowColor: Colors.black26,
+                  borderRadius: BorderRadius.circular(8),
+                  child: TextField(
+                    controller: _nimController,
+                    decoration: InputDecoration(
+                      hintText: 'isi nim Mahasiswa',
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Nama
+                Material(
+                  elevation: 2,
+                  shadowColor: Colors.black26,
+                  borderRadius: BorderRadius.circular(8),
+                  child: TextField(
+                    controller: _namaController,
+                    decoration: InputDecoration(
+                      hintText: 'isi nama mahasiswa',
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Kelas
+                Material(
+                  elevation: 2,
+                  shadowColor: Colors.black26,
+                  borderRadius: BorderRadius.circular(8),
+                  child: TextField(
+                    controller: _kelasController,
+                    decoration: InputDecoration(
+                      hintText: 'Kelas',
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 30),
+                // Button Tambah
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF9BC60), // kuning
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    onPressed: () {
+                      if (_nimController.text.isNotEmpty &&
+                          _namaController.text.isNotEmpty) {
+                        setState(() {
+                          mahasiswaList.add({
+                            'nim': _nimController.text,
+                            'nama': _namaController.text,
+                            'kelas': _kelasController.text,
+                          });
+                        });
+                        _nimController.clear();
+                        _namaController.clear();
+                        _kelasController.text = 'IF-46-06';
+                        Navigator.of(context).pop();
+                      }
+                    },
+                    child: const Text(
+                      'Tambah',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
@@ -345,145 +167,6 @@ class _LectureScreenState extends State<LectureScreen> {
               ],
             ),
           ),
-        );
-      },
-    );
-  }
-
-  Widget _buildTextField(
-    String label,
-    String hint,
-    TextEditingController controller,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF000000),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Container(
-          decoration: _boxShadowDecoration(),
-          child: TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              hintText: hint,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(5),
-                borderSide: BorderSide.none,
-              ),
-              filled: true,
-              fillColor: Colors.white,
-            ),
-          ),
-        ),
-        const SizedBox(height: 13),
-      ],
-    );
-  }
-
-  BoxDecoration _boxShadowDecoration() {
-    return BoxDecoration(
-      boxShadow: [
-        BoxShadow(
-          color: Color(0xFFA9A9A9),
-          blurRadius: 8,
-          offset: const Offset(3, 3),
-        ),
-      ],
-    );
-  }
-
-  void _showDosenDialog(
-    BuildContext context, {
-    String? kodeDosenKoor,
-    String? namaDosenKoor,
-    String? email,
-    String? kontak,
-    String? namaCourse,
-    String? kodeMatkul,
-  }) {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext dialogContext) {
-        // <- gunakan dialogContext
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          title: Text(
-            'Informasi Dosen Koordinator',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Divider(thickness: 2),
-              SizedBox(height: 2),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Kode: $kodeDosenKoor',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-              ),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Nama: $namaDosenKoor',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-              ),
-              SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text('Email: $email'),
-              ),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text('Nomor Telepon: $kontak'),
-              ),
-              SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Koordinator Mata Kuliah: $namaCourse [$kodeMatkul]',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF004643),
-                minimumSize: const Size.fromHeight(40),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
-                ),
-              ),
-              onPressed: () {
-                Navigator.of(
-                  dialogContext,
-                ).pop(); // <- gunakan context dari dialog
-              },
-              child: const Text(
-                'Tutup',
-                style: TextStyle(
-                  color: Color(0xFFF9BC60),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
         );
       },
     );
@@ -529,7 +212,6 @@ class _LectureScreenState extends State<LectureScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF004643),
       appBar: AppBar(
         backgroundColor: const Color(0xFF004643),
         elevation: 0,
@@ -539,8 +221,7 @@ class _LectureScreenState extends State<LectureScreen> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder:
-                    (context) => MyApp_course(kodePengampu: widget.kodeDosen),
+                builder: (context) => MyApp_course(kodePengampu: ''),
               ),
             );
           },
@@ -583,171 +264,99 @@ class _LectureScreenState extends State<LectureScreen> {
                     _buildMenuButton("Activity"),
                     const SizedBox(width: 12),
                     _buildMenuButton("Mahasiswa"),
+                    const SizedBox(width: 68),
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(0xFFF9BC60),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0xFF2A2A2A),
+                                blurRadius: 4,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => showAddMahasiswaDialog(context),
+                          child: const Icon(
+                            Icons.add,
+                            color: Color(0xFF004643),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 10),
-            // Scrollable content area
+
+            // list mahasiswa
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // === Container 1 ===
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            namaCourse,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
-                          Text(
-                            kodeMatkul,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text("Kelas: $kodeKelas", style: TextStyle(fontSize: 12)),
-                          Text("SKS: $sks", style: TextStyle(fontSize: 12)),
-                          const SizedBox(height: 16),
-                          Text(
-                            "Dosen Pengampu: $namaDosen [$kodeDosen]",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          RichText(
-                            text: TextSpan(
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black,
-                              ),
-                              children: [
-                                const TextSpan(text: 'Dosen Koordinator: '),
-                                TextSpan(
-                                  text: '$namaDosenKoor [$kodeDosenKoor]',
-                                  style: const TextStyle(
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                  recognizer: _tapRecognizer,
-                                ),
-                              ],
-                            ),
-                          ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16), // jarak dari kiri-kanan layar
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      // Header Tabel
+                      Row(
+                        children: const [
+                          Expanded(flex: 3, child: Text('NIM', style: TextStyle(fontWeight: FontWeight.bold))),
+                          Expanded(flex: 3, child: Text('Nama', style: TextStyle(fontWeight: FontWeight.bold))),
+                          Expanded(flex: 2, child: Text('Kelas', style: TextStyle(fontWeight: FontWeight.bold))),
+                          Expanded(flex: 1, child: SizedBox()), // untuk ikon delete
                         ],
                       ),
-                    ),
+                      const Divider(),
 
-                    const SizedBox(height: 24),
-
-                    // === Tombol Create Quiz ===
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF9BC60),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      onPressed: _showCreateQuizDialog,
-                      child: const Text(
-                        'Create Quiz',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF004643),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // === ListView builder for Quiz ===
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: quizList.length,
-                      itemBuilder: (context, index) {
-                        final quiz = quizList[index];
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => MyApp_viewNilai(),
+                      // List Data
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: mahasiswaList.length,
+                          itemBuilder: (context, index) {
+                            final mahasiswa = mahasiswaList[index];
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              child: Row(
+                                children: [
+                                  Expanded(flex: 3, child: Text(mahasiswa['nim'] ?? '')),
+                                  Expanded(flex: 3, child: Text(mahasiswa['nama'] ?? '')),
+                                  Expanded(flex: 2, child: Text(mahasiswa['kelas'] ?? '')),
+                                  Expanded(
+                                    flex: 1,
+                                    child: IconButton(
+                                      icon: const Icon(Icons.delete, color: Color(0xFF004643)),
+                                      onPressed: () {
+                                        setState(() {
+                                          mahasiswaList.removeAt(index);
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                ],
                               ),
                             );
                           },
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 16),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFABD1C6),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Stack(
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        const Icon(Icons.assignment, color: Color(0xFF004643)),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          quiz['title'] ?? '',
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black87,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const Divider(color: Colors.black54, thickness: 1),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          "Closed : ${quiz['closed']}",
-                                          style: const TextStyle(fontSize: 14, color: Colors.black87),
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(Icons.delete, color: Colors.black),
-                                          onPressed: () {
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    )
-                  ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
