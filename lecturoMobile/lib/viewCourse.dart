@@ -99,7 +99,7 @@ class _LectureScreenState extends State<LectureScreen> {
   Future<void> fetchDosenKoor() async {
     try {
       final response = await _dio.post(
-        "http://192.168.100.97/lecturo/getDosenKoor.php",
+        "http://10.0.2.2/lecturo/getDosenKoor.php",
         data: {"kode": widget.kodeMatkul},
       );
 
@@ -130,7 +130,7 @@ class _LectureScreenState extends State<LectureScreen> {
   Future<void> fetchKodeDosen2() async {
     try {
       final response = await _dio.post(
-        "http://192.168.100.97/lecturo/getDosen.php",
+        "http://10.0.2.2/lecturo/getDosen.php",
         data: {"kode": kodeDosenKoor},
       );
 
@@ -158,7 +158,7 @@ class _LectureScreenState extends State<LectureScreen> {
   Future<void> fetchKodeDosen() async {
     try {
       final response = await _dio.post(
-        "http://192.168.100.97/lecturo/getDosen.php",
+        "http://10.0.2.2/lecturo/getDosen.php",
         data: {"kode": widget.kodeDosen},
       );
 
@@ -186,7 +186,7 @@ class _LectureScreenState extends State<LectureScreen> {
   Future<void> fetchKodeCourse() async {
     try {
       final response = await _dio.post(
-        "http://192.168.100.97/lecturo/getCourse2.php",
+        "http://10.0.2.2/lecturo/getCourse2.php",
         data: {
           "kodeMatkul": widget.kodeMatkul,
           "kodeDosen": widget.kodeDosen,
