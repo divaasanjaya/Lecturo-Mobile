@@ -236,11 +236,7 @@ class _HomePageState extends State<HomePage> {
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.circle,
-                    color: Color(0xFFF9BC60),
-                    size: 20,
-                  ),
+                  const Icon(Icons.circle, color: Color(0xFFF9BC60), size: 20),
                   const SizedBox(width: 8),
                   Text(
                     "Lecturo",
@@ -301,7 +297,9 @@ class _HomePageState extends State<HomePage> {
             // list mahasiswa
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16), // jarak dari kiri-kanan layar
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                ), // jarak dari kiri-kanan layar
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -313,10 +311,31 @@ class _HomePageState extends State<HomePage> {
                       // Header Tabel
                       Row(
                         children: const [
-                          Expanded(flex: 3, child: Text('NIM', style: TextStyle(fontWeight: FontWeight.bold))),
-                          Expanded(flex: 3, child: Text('Nama', style: TextStyle(fontWeight: FontWeight.bold))),
-                          Expanded(flex: 2, child: Text('Kelas', style: TextStyle(fontWeight: FontWeight.bold))),
-                          Expanded(flex: 1, child: SizedBox()), // untuk ikon delete
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              'NIM',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              'Nama',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              'Kelas',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: SizedBox(),
+                          ), // untuk ikon delete
                         ],
                       ),
                       const Divider(),
@@ -328,16 +347,30 @@ class _HomePageState extends State<HomePage> {
                           itemBuilder: (context, index) {
                             final mahasiswa = mahasiswaList[index];
                             return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
                               child: Row(
                                 children: [
-                                  Expanded(flex: 3, child: Text(mahasiswa['nim'] ?? '')),
-                                  Expanded(flex: 3, child: Text(mahasiswa['nama'] ?? '')),
-                                  Expanded(flex: 2, child: Text(mahasiswa['kelas'] ?? '')),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Text(mahasiswa['nim'] ?? ''),
+                                  ),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Text(mahasiswa['nama'] ?? ''),
+                                  ),
+                                  Expanded(
+                                    flex: 2,
+                                    child: Text(mahasiswa['kelas'] ?? ''),
+                                  ),
                                   Expanded(
                                     flex: 1,
                                     child: IconButton(
-                                      icon: const Icon(Icons.delete, color: Color(0xFF004643)),
+                                      icon: const Icon(
+                                        Icons.delete,
+                                        color: Color(0xFF004643),
+                                      ),
                                       onPressed: () {
                                         setState(() {
                                           mahasiswaList.removeAt(index);
