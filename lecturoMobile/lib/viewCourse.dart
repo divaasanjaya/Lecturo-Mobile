@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/gestures.dart';
+import 'viewMahasiswa.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ViewCourse extends StatefulWidget {
@@ -557,7 +558,12 @@ class _ViewCourseState extends State<ViewCourse> {
                     _buildMenuButton("Activity", null),
                     const SizedBox(width: 12),
                     _buildMenuButton("Mahasiswa", () {
-                      // Navigation to Mahasiswa view would go here
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MyApp_viewMahasiswa(),
+                        ),
+                      );
                     }),
                   ],
                 ),
