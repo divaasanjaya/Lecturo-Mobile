@@ -1,15 +1,25 @@
 import 'package:flutter/material.dart';
-import 'viewCourse.dart';
 import 'course.dart';
+import 'viewCourse.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 void main() {
-  runApp(const MyApp_viewMahasiswa());
+  runApp(
+    const MyApp_viewMahasiswa(kodeDosen: '', kodeMatkul: '', kodeKelas: ''),
+  );
 }
 
 class MyApp_viewMahasiswa extends StatelessWidget {
-  const MyApp_viewMahasiswa({super.key});
+  final String kodeDosen;
+  final String kodeMatkul;
+  final String kodeKelas;
+  const MyApp_viewMahasiswa({
+    Key? key,
+    required this.kodeDosen,
+    required this.kodeMatkul,
+    required this.kodeKelas,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -19,23 +29,35 @@ class MyApp_viewMahasiswa extends StatelessWidget {
         fontFamily: 'Outfit',
         scaffoldBackgroundColor: const Color(0xFF004643),
       ),
-      home: const HomePage(),
+      home: ViewMahasiswaPage(
+        kodeDosen: kodeDosen,
+        kodeMatkul: kodeMatkul,
+        kodeKelas: kodeKelas,
+      ),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class ViewMahasiswaPage extends StatefulWidget {
+  final String kodeDosen;
+  final String kodeMatkul;
+  final String kodeKelas;
+  const ViewMahasiswaPage({
+    Key? key,
+    required this.kodeDosen,
+    required this.kodeMatkul,
+    required this.kodeKelas,
+  }) : super(key: key);
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<ViewMahasiswaPage> createState() => _ViewMahasiswaPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _ViewMahasiswaPageState extends State<ViewMahasiswaPage> {
+  late String selectedKelas;
   final TextEditingController _nimController = TextEditingController();
   final TextEditingController _namaController = TextEditingController();
-  String selectedKelas = 'IF-46-06'; // Default value
 
   List<Map<String, dynamic>> mahasiswaList = [];
   List<String> kelasList = [];
@@ -44,6 +66,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    selectedKelas = widget.kodeKelas;
     _fetchKelas();
     _fetchMahasiswa();
   }
@@ -75,7 +98,7 @@ class _HomePageState extends State<HomePage> {
       final response = await http.post(
         Uri.parse('http://10.0.2.2/lecturo/getInfoMahasiswa.php'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'kodeKelas': selectedKelas}),
+        body: jsonEncode({'kodeMatkul': widget.kodeMatkul}),
       );
 
       if (response.statusCode == 200) {
@@ -95,9 +118,11 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         isLoading = false;
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      }
     }
   }
 
@@ -116,19 +141,16 @@ class _HomePageState extends State<HomePage> {
       if (response.statusCode == 200) {
         final result = json.decode(response.body);
         if (result['success'] == true) {
-          // Clear controllers first
           _nimController.clear();
           _namaController.clear();
 
-          // Close the dialog before updating state
-          Navigator.of(context).pop();
-
-          // Refresh the data
-          await _fetchMahasiswa();
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Mahasiswa berhasil ditambahkan')),
-          );
+          if (mounted) {
+            Navigator.of(context).pop();
+            await _fetchMahasiswa();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Mahasiswa berhasil ditambahkan')),
+            );
+          }
         } else {
           throw Exception(result['message']);
         }
@@ -136,9 +158,11 @@ class _HomePageState extends State<HomePage> {
         throw Exception('Failed to add data');
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      }
     }
   }
 
@@ -147,26 +171,42 @@ class _HomePageState extends State<HomePage> {
       final response = await http.post(
         Uri.parse('http://10.0.2.2/lecturo/delMahasiswa.php'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'NIM': nim}),
+        body: jsonEncode({'NIM': nim, 'kodeMatkul': widget.kodeMatkul}),
       );
 
       if (response.statusCode == 200) {
+        print('Raw response: ${response.body}');
+
         final result = json.decode(response.body);
         if (result['success'] == true) {
-          await _fetchMahasiswa();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Mahasiswa berhasil dihapus')),
-          );
+          if (mounted) {
+            await _fetchMahasiswa();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  result['message'] ?? 'Mahasiswa berhasil dihapus',
+                ),
+              ),
+            );
+          }
         } else {
-          throw Exception(result['message']);
+          throw Exception(result['message'] ?? 'Gagal menghapus mahasiswa');
         }
       } else {
-        throw Exception('Failed to delete data');
+        throw Exception('HTTP Error ${response.statusCode}: ${response.body}');
+      }
+    } on FormatException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Format error: ${e.message}')));
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      }
     }
   }
 
@@ -196,7 +236,6 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  // NIM
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -232,7 +271,6 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  // Nama
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -268,7 +306,6 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  // Kelas
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -306,7 +343,6 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   const SizedBox(height: 30),
-                  // Button Tambah
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -345,24 +381,33 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildMenuButton(String label) {
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
+        if (!mounted) return;
+
         if (label == 'Activity') {
-          Navigator.push(
-            context,
+          await Navigator.of(context).push(
             MaterialPageRoute(
               builder:
-                  (context) =>
-                      ViewCourse(kodeDosen: '', kodeMatkul: '', kodeKelas: ''),
+                  (context) => ViewCourse(
+                    kodeDosen: widget.kodeDosen,
+                    kodeMatkul: widget.kodeMatkul,
+                    kodeKelas: widget.kodeKelas,
+                  ),
             ),
           );
         } else if (label == 'Mahasiswa') {
-          // Biarkan tetap di halaman ini
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Anda sudah di halaman $label')),
+          );
         }
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFFF9BC60),
+          color:
+              label == 'Mahasiswa'
+                  ? const Color(0xFFF9BC60).withOpacity(0.8)
+                  : const Color(0xFFF9BC60),
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
@@ -374,10 +419,19 @@ class _HomePageState extends State<HomePage> {
         ),
         child: Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 14,
-            color: Color(0xFF004643),
+            color: const Color(0xFF004643),
+            shadows:
+                label == 'Mahasiswa'
+                    ? [
+                      Shadow(
+                        blurRadius: 2,
+                        color: Colors.black.withOpacity(0.2),
+                      ),
+                    ]
+                    : null,
           ),
         ),
       ),
@@ -393,12 +447,17 @@ class _HomePageState extends State<HomePage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => MyApp_course(kodePengampu: ''),
-              ),
-            );
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) => MyApp_course(kodePengampu: widget.kodeDosen),
+                ),
+              );
+            }
           },
         ),
       ),
@@ -406,7 +465,6 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header: Lecturo
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
@@ -424,7 +482,6 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-
             Padding(
               padding: const EdgeInsets.only(left: 16),
               child: Align(
@@ -468,8 +525,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(height: 10),
-
-            // list mahasiswa
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -481,7 +536,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                   child: Column(
                     children: [
-                      // Header Tabel
                       Row(
                         children: const [
                           Expanded(
@@ -509,8 +563,6 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
                       const Divider(),
-
-                      // List Data
                       isLoading
                           ? const Center(child: CircularProgressIndicator())
                           : Expanded(

@@ -13,46 +13,81 @@ if (
     $nama = $data["nama"];
     $kodeKelas = $data["kodeKelas"];
 
-    // Check if student already exists
-    $checkQuery = $conn->prepare("SELECT NIM FROM mahasiswa WHERE NIM = ?");
-    $checkQuery->bind_param("i", $NIM);
-    $checkQuery->execute();
-    $checkQuery->store_result();
-    
-    if ($checkQuery->num_rows > 0) {
-        echo json_encode([
-            "success" => false, 
-            "message" => "Mahasiswa dengan NIM tersebut sudah terdaftar"
-        ]);
+    // Mulai transaksi
+    $conn->begin_transaction();
+
+    try {
+        // 1. Cek apakah mahasiswa sudah ada
+        $checkQuery = $conn->prepare("SELECT NIM FROM mahasiswa WHERE NIM = ?");
+        $checkQuery->bind_param("i", $NIM);
+        $checkQuery->execute();
+        $checkQuery->store_result();
+        
+        if ($checkQuery->num_rows > 0) {
+            echo json_encode([
+                "success" => false, 
+                "message" => "Mahasiswa dengan NIM tersebut sudah terdaftar"
+            ]);
+            exit();
+        }
         $checkQuery->close();
-        $conn->close();
-        exit();
-    }
-    $checkQuery->close();
 
-    // Insert new student
-    $insertQuery = $conn->prepare("INSERT INTO mahasiswa (NIM, nama, kodeKelas) VALUES (?, ?, ?)");
-    $insertQuery->bind_param("iss", $NIM, $nama, $kodeKelas);
+        // 2. Dapatkan kodeMatkul dari tabel course berdasarkan kodeKelas
+        $getMatkulQuery = $conn->prepare("SELECT kodeMatkul FROM course WHERE kodeKelas = ?");
+        $getMatkulQuery->bind_param("s", $kodeKelas);
+        $getMatkulQuery->execute();
+        $result = $getMatkulQuery->get_result();
+        
+        if ($result->num_rows == 0) {
+            throw new Exception("Tidak ditemukan mata kuliah untuk kelas ini");
+        }
+        
+        $matkulData = $result->fetch_assoc();
+        $kodeMatkul = $matkulData['kodeMatkul'];
+        $getMatkulQuery->close();
 
-    if ($insertQuery->execute()) {
+        // 3. Insert ke tabel mahasiswa
+        $insertMahasiswa = $conn->prepare("INSERT INTO mahasiswa (NIM, nama, kodeKelas) VALUES (?, ?, ?)");
+        $insertMahasiswa->bind_param("iss", $NIM, $nama, $kodeKelas);
+        
+        if (!$insertMahasiswa->execute()) {
+            throw new Exception("Gagal menambahkan ke tabel mahasiswa: " . $conn->error);
+        }
+        $insertMahasiswa->close();
+
+        // 4. Insert ke tabel course_mahasiswa
+        $insertCourseMhs = $conn->prepare("INSERT INTO course_mahasiswa (kodeMatkul, NIM) VALUES (?, ?)");
+        $insertCourseMhs->bind_param("si", $kodeMatkul, $NIM);
+        
+        if (!$insertCourseMhs->execute()) {
+            throw new Exception("Gagal menambahkan ke tabel course_mahasiswa: " . $conn->error);
+        }
+        $insertCourseMhs->close();
+
+        // Commit transaksi jika semua berhasil
+        $conn->commit();
+
         echo json_encode([
             "success" => true, 
-            "message" => "Mahasiswa berhasil ditambahkan",
+            "message" => "Mahasiswa berhasil ditambahkan ke kedua tabel",
             "data" => [
                 "NIM" => $NIM,
                 "nama" => $nama,
-                "kodeKelas" => $kodeKelas
+                "kodeKelas" => $kodeKelas,
+                "kodeMatkul" => $kodeMatkul
             ]
         ]);
-    } else {
+
+    } catch (Exception $e) {
+        // Rollback jika ada error
+        $conn->rollback();
         echo json_encode([
             "success" => false, 
-            "message" => "Gagal menambahkan mahasiswa",
+            "message" => $e->getMessage(),
             "error" => $conn->error
         ]);
     }
 
-    $insertQuery->close();
 } else {
     echo json_encode([
         "success" => false, 

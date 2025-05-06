@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/gestures.dart';
+import 'package:tubes/course.dart';
 import 'viewMahasiswa.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'viewNilai.dart';
 
 class ViewCourse extends StatefulWidget {
   final String kodeMatkul;
@@ -522,7 +524,15 @@ class _ViewCourseState extends State<ViewCourse> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (context) => MyApp_course(kodePengampu: widget.kodeDosen),
+              ),
+            );
+          },
         ),
       ),
       body: SafeArea(
@@ -561,7 +571,12 @@ class _ViewCourseState extends State<ViewCourse> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => MyApp_viewMahasiswa(),
+                          builder:
+                              (context) => MyApp_viewMahasiswa(
+                                kodeDosen: widget.kodeDosen,
+                                kodeMatkul: widget.kodeMatkul,
+                                kodeKelas: widget.kodeKelas,
+                              ),
                         ),
                       );
                     }),
@@ -674,7 +689,16 @@ class _ViewCourseState extends State<ViewCourse> {
                         final quiz = quizzes[index];
                         return GestureDetector(
                           onTap: () {
-                            // Navigation to quiz details would go here
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => MyApp_viewNilai(
+                                      kodeMatkul: widget.kodeMatkul,
+                                      kodeKelas: widget.kodeKelas,
+                                    ),
+                              ),
+                            );
                           },
                           child: Container(
                             margin: const EdgeInsets.only(bottom: 16),

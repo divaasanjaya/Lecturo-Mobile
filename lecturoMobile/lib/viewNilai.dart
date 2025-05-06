@@ -1,12 +1,22 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'course.dart';
+import 'viewCourse.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
-  runApp(const MyApp_viewNilai());
+  runApp(const MyApp_viewNilai(kodeMatkul: '', kodeKelas: ''));
 }
 
 class MyApp_viewNilai extends StatelessWidget {
-  const MyApp_viewNilai({super.key});
+  final String kodeMatkul;
+  final String kodeKelas;
+  const MyApp_viewNilai({
+    Key? key,
+    required this.kodeMatkul,
+    required this.kodeKelas,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -16,20 +26,97 @@ class MyApp_viewNilai extends StatelessWidget {
         fontFamily: 'Outfit',
         scaffoldBackgroundColor: const Color(0xFF004643),
       ),
-      home: const NilaiPage(),
+      home: NilaiPage(kodeMatkul: kodeMatkul, kodeKelas: kodeKelas),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
 class NilaiPage extends StatefulWidget {
-  const NilaiPage({super.key});
+  const NilaiPage({Key? key, required this.kodeMatkul, required this.kodeKelas})
+    : super(key: key);
+  final String kodeMatkul;
+  final String kodeKelas;
 
   @override
   State<NilaiPage> createState() => _NilaiPageState();
 }
 
 class _NilaiPageState extends State<NilaiPage> {
+  String? errorMessage;
+  String kodePengampu = '';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchKodeCourse();
+    fetchNilai();
+  }
+
+  Future<void> fetchNilai() async {
+    try {
+      var url = Uri.parse('http://10.0.2.2/lecturo/getNilai.php');
+      var response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "kodeMatkul": widget.kodeMatkul,
+          "kodeKelas": widget.kodeKelas,
+        }),
+      );
+
+      var data = json.decode(response.body);
+      if (data["success"]) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("course", jsonEncode(data["course"]));
+
+        setState(() {
+          kodePengampu = data["course"]["dosenPengampu"];
+        });
+      } else {
+        setState(() {
+          errorMessage = data["message"];
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = "Error fetching course data";
+      });
+    }
+  }
+
+  Future<void> fetchKodeCourse() async {
+    try {
+      var url = Uri.parse('http://10.0.2.2/lecturo/getCourse2.php');
+      var response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "kodeMatkul": widget.kodeMatkul,
+          "kodeKelas": widget.kodeKelas,
+        }),
+      );
+
+      var data = json.decode(response.body);
+      if (data["success"]) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("course", jsonEncode(data["course"]));
+
+        setState(() {
+          kodePengampu = data["course"]["dosenPengampu"];
+        });
+      } else {
+        setState(() {
+          errorMessage = data["message"];
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = "Error fetching course data";
+      });
+    }
+  }
+
   final List<Map<String, String>> nilaiList = [
     {"nim": "1301223248", "nama": "Muthia Rihadatul A", "nilai": "100"},
     {"nim": "1301223249", "nama": "Nasywa Alif Widya", "nilai": "100"},
@@ -51,7 +138,12 @@ class _NilaiPageState extends State<NilaiPage> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => MyApp_course(kodePengampu: ''),
+                builder:
+                    (context) => ViewCourse(
+                      kodeDosen: kodePengampu,
+                      kodeMatkul: widget.kodeMatkul,
+                      kodeKelas: widget.kodeKelas,
+                    ),
               ),
             );
           },
@@ -66,11 +158,7 @@ class _NilaiPageState extends State<NilaiPage> {
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.circle,
-                    color: Color(0xFFF9BC60),
-                    size: 20,
-                  ),
+                  const Icon(Icons.circle, color: Color(0xFFF9BC60), size: 20),
                   const SizedBox(width: 8),
                   Text(
                     "Lecturo",
@@ -101,7 +189,9 @@ class _NilaiPageState extends State<NilaiPage> {
             // list nilai
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16), // jarak dari kiri-kanan layar
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                ), // jarak dari kiri-kanan layar
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -113,10 +203,31 @@ class _NilaiPageState extends State<NilaiPage> {
                       // Header Tabel
                       Row(
                         children: const [
-                          Expanded(flex: 3, child: Text('NIM', style: TextStyle(fontWeight: FontWeight.bold))),
-                          Expanded(flex: 3, child: Text('Nama', style: TextStyle(fontWeight: FontWeight.bold))),
-                          Expanded(flex: 1, child: Text('Nilai', style: TextStyle(fontWeight: FontWeight.bold))),
-                          Expanded(flex: 1, child: SizedBox()), // untuk ikon delete
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              'NIM',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              'Nama',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: Text(
+                              'Nilai',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: SizedBox(),
+                          ), // untuk ikon delete
                           Expanded(flex: 1, child: SizedBox()),
                         ],
                       ),
@@ -129,16 +240,30 @@ class _NilaiPageState extends State<NilaiPage> {
                           itemBuilder: (context, index) {
                             final nilai = nilaiList[index];
                             return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
                               child: Row(
                                 children: [
-                                  Expanded(flex: 3, child: Text(nilai['nim'] ?? '')),
-                                  Expanded(flex: 3, child: Text(nilai['nama'] ?? '')),
-                                  Expanded(flex: 1, child: Text(nilai['nilai'] ?? '')),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Text(nilai['nim'] ?? ''),
+                                  ),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Text(nilai['nama'] ?? ''),
+                                  ),
+                                  Expanded(
+                                    flex: 1,
+                                    child: Text(nilai['nilai'] ?? ''),
+                                  ),
                                   Expanded(
                                     flex: 1,
                                     child: IconButton(
-                                      icon: const Icon(Icons.edit, color: Color(0xFF004643)),
+                                      icon: const Icon(
+                                        Icons.edit,
+                                        color: Color(0xFF004643),
+                                      ),
                                       onPressed: () {
                                         _showEditDialog(context, nilai);
                                       },
@@ -147,7 +272,10 @@ class _NilaiPageState extends State<NilaiPage> {
                                   Expanded(
                                     flex: 1,
                                     child: IconButton(
-                                      icon: const Icon(Icons.delete, color: Color(0xFF004643)),
+                                      icon: const Icon(
+                                        Icons.delete,
+                                        color: Color(0xFF004643),
+                                      ),
                                       onPressed: () {
                                         _showDeleteDialog(context, nilai);
                                       },
@@ -172,9 +300,15 @@ class _NilaiPageState extends State<NilaiPage> {
   }
 
   void _showEditDialog(BuildContext context, Map<String, String> nilai) {
-    final TextEditingController nimController = TextEditingController(text: nilai['nim']);
-    final TextEditingController namaController = TextEditingController(text: nilai['nama']);
-    final TextEditingController nilaiController = TextEditingController(text: nilai['nilai']);
+    final TextEditingController nimController = TextEditingController(
+      text: nilai['nim'],
+    );
+    final TextEditingController namaController = TextEditingController(
+      text: nilai['nama'],
+    );
+    final TextEditingController nilaiController = TextEditingController(
+      text: nilai['nilai'],
+    );
 
     showDialog(
       context: context,
@@ -203,43 +337,79 @@ class _NilaiPageState extends State<NilaiPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Text('NIM', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF004643))),
+                  const Text(
+                    'NIM',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF004643),
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   Container(
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: TextField(
                       controller: nimController,
                       readOnly: true,
                       decoration: const InputDecoration(
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 14,
+                        ),
                         border: InputBorder.none,
                       ),
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text('Nama', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF004643))),
+                  const Text(
+                    'Nama',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF004643),
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   Container(
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: TextField(
                       controller: namaController,
                       readOnly: true,
                       decoration: const InputDecoration(
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 14,
+                        ),
                         border: InputBorder.none,
                       ),
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text('Nilai', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF004643))),
+                  const Text(
+                    'Nilai',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF004643),
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   Container(
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: TextField(
                       controller: nilaiController,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 14,
+                        ),
                         border: InputBorder.none,
                       ),
                     ),
@@ -251,7 +421,9 @@ class _NilaiPageState extends State<NilaiPage> {
                       onPressed: () {
                         final newNilai = nilaiController.text;
                         setState(() {
-                          final index = nilaiList.indexWhere((item) => item['nim'] == nilai['nim']);
+                          final index = nilaiList.indexWhere(
+                            (item) => item['nim'] == nilai['nim'],
+                          );
                           if (index != -1) {
                             nilaiList[index]['nilai'] = newNilai;
                           }
@@ -262,12 +434,17 @@ class _NilaiPageState extends State<NilaiPage> {
                         backgroundColor: const Color(0xFFF9BC60),
                         foregroundColor: const Color(0xFF004643),
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         elevation: 4,
                       ),
                       child: const Text(
                         'Edit',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -288,7 +465,9 @@ class _NilaiPageState extends State<NilaiPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Delete Data'),
-          content: Text('Apakah kamu yakin ingin menghapus data untuk NIM: $nim?'),
+          content: Text(
+            'Apakah kamu yakin ingin menghapus data untuk NIM: $nim?',
+          ),
           actions: [
             TextButton(
               onPressed: () {
