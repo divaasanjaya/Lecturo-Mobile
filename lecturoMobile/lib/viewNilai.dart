@@ -1,14 +1,24 @@
+import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'viewCourse.dart';
-import 'viewMahasiswa.dart';
-import 'course.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
-  runApp(const MyApp_viewNilai());
+  runApp(const MyApp_viewNilai(kodeMatkul: '', kodeKelas: '', nama: ''));
 }
 
 class MyApp_viewNilai extends StatelessWidget {
-  const MyApp_viewNilai({super.key});
+  final String kodeMatkul;
+  final String kodeKelas;
+  final String nama;
+  const MyApp_viewNilai({
+    Key? key,
+    required this.kodeMatkul,
+    required this.kodeKelas,
+    required this.nama,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -18,21 +28,124 @@ class MyApp_viewNilai extends StatelessWidget {
         fontFamily: 'Outfit',
         scaffoldBackgroundColor: const Color(0xFF004643),
       ),
-      home: const NilaiPage(),
+      home: NilaiPage(kodeMatkul: kodeMatkul, kodeKelas: kodeKelas, nama: nama),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
 class NilaiPage extends StatefulWidget {
-  const NilaiPage({super.key});
+  const NilaiPage({
+    Key? key,
+    required this.kodeMatkul,
+    required this.kodeKelas,
+    required this.nama,
+  }) : super(key: key);
+  final String kodeMatkul;
+  final String kodeKelas;
+  final String nama;
 
   @override
   State<NilaiPage> createState() => _NilaiPageState();
 }
 
 class _NilaiPageState extends State<NilaiPage> {
-  String _dropdownValue = 'Nilai'; // Dropdown menu
+  List<Map<String, dynamic>> mquiz = [];
+  String? nama;
+  final Dio _dio = Dio();
+  String? errorMessage;
+  String kodePengampu = '';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchKodeCourse();
+    fetchNilai();
+  }
+
+  Future<void> fetchNilai() async {
+    try {
+      final response = await _dio.post(
+        "http://10.0.2.2/lecturo/getNilai.php",
+        data: {"nama": widget.nama, "kodeKelas": widget.kodeKelas},
+      );
+
+      final data = response.data;
+      if (data["success"]) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("mquiz", jsonEncode(data["mquiz"]));
+
+        if (!mounted) return;
+        setState(() {
+          mquiz = List<Map<String, dynamic>>.from(data["mquiz"]);
+        });
+      } else {
+        if (!mounted) return;
+        setState(() {
+          errorMessage = data["message"];
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        errorMessage = "Kode atau password Anda salah!";
+      });
+    }
+  }
+
+  Future<void> updelNilai(int nim, int nilai) async {
+    try {
+      final response = await _dio.post(
+        "http://10.0.2.2/lecturo/updelNilai.php",
+        data: {
+          "nim": nim,
+          "namaQuiz": widget.nama,
+          "kodeKelas": widget.kodeKelas,
+          "nilai": nilai,
+        },
+      );
+      print(response.data);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        errorMessage = "Kode atau password Anda salah!";
+      });
+    }
+  }
+
+  Future<void> fetchKodeCourse() async {
+    try {
+      var url = Uri.parse('http://10.0.2.2/lecturo/getCourse2.php');
+      var response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "kodeMatkul": widget.kodeMatkul,
+          "kodeKelas": widget.kodeKelas,
+        }),
+      );
+
+      var data = json.decode(response.body);
+      if (data["success"]) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("course", jsonEncode(data["course"]));
+
+        setState(() {
+          kodePengampu = data["course"]["dosenPengampu"];
+        });
+      } else {
+        setState(() {
+          errorMessage = data["message"];
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = "Error fetching course data";
+      });
+    }
+  }
+
+  List<Map<String, dynamic>> get nilaiList => mquiz;
 
   @override
   Widget build(BuildContext context) {
@@ -46,19 +159,25 @@ class _NilaiPageState extends State<NilaiPage> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => MyApp_course(kodePengampu: ''),
+                builder:
+                    (context) => ViewCourse(
+                      kodeDosen: kodePengampu,
+                      kodeMatkul: widget.kodeMatkul,
+                      kodeKelas: widget.kodeKelas,
+                    ),
               ),
             );
           },
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header: Lecturo
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
                 children: [
                   const Icon(Icons.circle, color: Color(0xFFF9BC60), size: 20),
                   const SizedBox(width: 8),
@@ -72,181 +191,145 @@ class _NilaiPageState extends State<NilaiPage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
-              // Dropdown Menu
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF9BC60),
-                  borderRadius: BorderRadius.circular(32),
-                ),
-                child: DropdownButton<String>(
-                  value: _dropdownValue,
-                  underline: const SizedBox(),
-                  icon: const Icon(Icons.arrow_drop_down),
-                  borderRadius: BorderRadius.circular(16),
-                  dropdownColor: const Color(0xFFF9BC60),
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF004643),
-                  ),
-                  items:
-                      <String>['Activity', 'Mahasiswa', 'Nilai'].map((
-                        String value,
-                      ) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                  onChanged: (String? newValue) {
-                    print('Dropdown value changed: $newValue');
-                    if (newValue != null) {
-                      setState(() {
-                        _dropdownValue = newValue;
-                      });
-                      print('Navigating to page for: $newValue');
-                      if (newValue == 'Nilai') {
-                      } else if (newValue == 'Activity') {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) => MyApp_viewCourse(
-                                  kodeDosen: '',
-                                  kodeMatkul: '',
-                                  kodeKelas: '',
-                                ),
-                          ),
-                        );
-                      } else if (newValue == 'Mahasiswa') {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => MyApp_viewMahasiswa(),
-                          ),
-                        );
-                      }
-                    }
-                  },
-                ),
-              ),
+            ),
+            const SizedBox(height: 5),
 
-              const SizedBox(height: 20),
-
-              // Title
-              const Text(
-                'Quiz 1 : Class Diagram',
-                style: TextStyle(
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                widget.nama,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
-              const SizedBox(height: 10),
+            ),
+            const SizedBox(height: 10),
 
-              // Table
-              Expanded(
+            // list nilai
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                ), // jarak dari kiri-kanan layar
                 child: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.vertical,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: DataTable(
-                        columnSpacing: 20,
-                        columns: const [
-                          DataColumn(label: Text('NIM')),
-                          DataColumn(label: Text('Nama')),
-                          DataColumn(label: Text('Nilai')),
-                          DataColumn(label: Text('')),
-                        ],
-                        rows: [
-                          _buildDataRowWithAction(
-                            '1301223248',
-                            'Muthia Rihadatul A',
-                            '100',
+                  child: Column(
+                    children: [
+                      // Header Tabel
+                      Row(
+                        children: const [
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              'NIM',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
                           ),
-                          _buildDataRowWithAction(
-                            '1301223248',
-                            'Nasywa Alif Widya',
-                            '100',
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              'Nama',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
                           ),
-                          _buildDataRowWithAction(
-                            '1301223248',
-                            'Achmad Rafly K Z',
-                            '100',
+                          Expanded(
+                            flex: 1,
+                            child: Text(
+                              'Nilai',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
                           ),
-                          _buildDataRowWithAction(
-                            '1301223248',
-                            'Farah Saraswati',
-                            '100',
-                          ),
-                          _buildDataRowWithAction(
-                            '1301223248',
-                            'Azra Feby Awfiyah',
-                            '100',
-                          ),
-                          _buildDataRowWithAction(
-                            '1301223248',
-                            'Diva Sanjaya W',
-                            '100',
-                          ),
+                          Expanded(
+                            flex: 1,
+                            child: SizedBox(),
+                          ), // untuk ikon delete
+                          Expanded(flex: 1, child: SizedBox()),
                         ],
                       ),
-                    ),
+                      const Divider(),
+
+                      // List Data
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: nilaiList.length,
+                          itemBuilder: (context, index) {
+                            final nilai = nilaiList[index];
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    flex: 3,
+                                    child: Text(nilai['nim'].toString()),
+                                  ),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Text(nilai['namaMahasiswa'] ?? ''),
+                                  ),
+                                  Expanded(
+                                    flex: 1,
+                                    child: Text(nilai['nilai'].toString()),
+                                  ),
+                                  Expanded(
+                                    flex: 1,
+                                    child: IconButton(
+                                      icon: const Icon(
+                                        Icons.edit,
+                                        color: Color(0xFF004643),
+                                      ),
+                                      onPressed: () {
+                                        _showEditDialog(context, nilai);
+                                      },
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 1,
+                                    child: IconButton(
+                                      icon: const Icon(
+                                        Icons.delete,
+                                        color: Color(0xFF004643),
+                                      ),
+                                      onPressed: () {
+                                        _showDeleteDialog(context, nilai);
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 20),
+          ],
         ),
       ),
     );
   }
 
-  DataRow _buildDataRowWithAction(String nim, String nama, String nilai) {
-    return DataRow(
-      cells: [
-        DataCell(Text(nim)),
-        DataCell(Text(nama)),
-        DataCell(Text(nilai)),
-        DataCell(
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.edit, size: 18),
-                onPressed: () {
-                  _showEditDialog(context, nim, nama, nilai);
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete, size: 18),
-                onPressed: () {
-                  _showDeleteDialog(context, nim);
-                },
-              ),
-            ],
-          ),
-        ),
-      ],
+  void _showEditDialog(BuildContext context, Map<String, dynamic> nilai) {
+    final TextEditingController nimController = TextEditingController(
+      text: nilai['nim'].toString(),
     );
-  }
-
-  void _showEditDialog(
-    BuildContext context,
-    String nim,
-    String nama,
-    String nilai,
-  ) {
-    TextEditingController nimController = TextEditingController(text: nim);
-    TextEditingController namaController = TextEditingController(text: nama);
-    TextEditingController nilaiController = TextEditingController(text: nilai);
+    final TextEditingController namaController = TextEditingController(
+      text: nilai['namaMahasiswa'],
+    );
+    final TextEditingController nilaiController = TextEditingController(
+      text: nilai['nilai'].toString(),
+    );
 
     showDialog(
       context: context,
@@ -356,10 +439,13 @@ class _NilaiPageState extends State<NilaiPage> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          // TODO: update nilai di list kalau ada
-                        });
+                      onPressed: () async {
+                        await updelNilai(
+                          nilai['nim'],
+                          int.parse(nilaiController.text),
+                        );
+                        await fetchNilai();
+                        setState(() {});
                         Navigator.of(context).pop();
                       },
                       style: ElevatedButton.styleFrom(
@@ -389,28 +475,32 @@ class _NilaiPageState extends State<NilaiPage> {
     );
   }
 
-  void _showDeleteDialog(BuildContext context, String nim) {
+  void _showDeleteDialog(BuildContext context, Map<String, dynamic> nilai) {
+    final nim = nilai['nim'].toString();
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Delete Data'),
-          content: Text('Are you sure you want to delete data for NIM: $nim?'),
+          content: Text(
+            'Apakah kamu yakin ingin menghapus data untuk NIM: $nim?',
+          ),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(); // Tutup dialog
               },
-              child: const Text('Cancel'),
+              child: const Text('Batal'),
             ),
             TextButton(
-              onPressed: () {
-                setState(() {
-                  // TODO: hapus data dari list kalau ada
-                });
-                Navigator.of(context).pop();
+              onPressed: () async {
+                await updelNilai(nilai['nim'], 0);
+                await fetchNilai();
+                setState(() {});
+                Navigator.of(context).pop(); // Tutup dialog setelah hapus
               },
-              child: const Text('Delete'),
+              child: const Text('Hapus', style: TextStyle(color: Colors.red)),
             ),
           ],
         );

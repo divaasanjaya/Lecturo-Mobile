@@ -5,13 +5,12 @@ header("Content-Type: application/json");
 
 $data = json_decode(file_get_contents("php://input"), true);
 
-if (isset($data["kodeMatkul"]) && isset($data["kodeDosen"]) && isset($data["kodeMatkul"])) {
+if (isset($data["kodeMatkul"]) && isset($data["kodeMatkul"])) {
     $kodeMatkul = $data["kodeMatkul"];
-    $kodeDosen = $data["kodeDosen"];
     $kodeKelas = $data["kodeKelas"];
 
-    $query = $conn->prepare("SELECT * FROM course WHERE kodeMatkul = ? AND dosenPengampu = ? AND kodeKelas = ?");
-    $query->bind_param("sss", $kodeMatkul, $kodeDosen, $kodeKelas);
+    $query = $conn->prepare("SELECT * FROM course WHERE kodeMatkul = ? AND kodeKelas = ?");
+    $query->bind_param("ss", $kodeMatkul, $kodeKelas);
     $query->execute();
     $result = $query->get_result();
 

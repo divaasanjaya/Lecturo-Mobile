@@ -339,7 +339,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                         context,
                                         MaterialPageRoute(
                                           builder:
-                                              (context) => MyApp_viewCourse(
+                                              (context) => ViewCourse(
                                                 kodeDosen: widget.kodePengampu,
                                                 kodeMatkul:
                                                     research["kodeMatkul"],
