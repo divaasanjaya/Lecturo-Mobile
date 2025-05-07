@@ -3,8 +3,6 @@ include "config.php";
 header("Content-Type: application/json");
 
 $data = json_decode(file_get_contents("php://input"), true);
-file_put_contents("log.txt", file_get_contents("php://input"), FILE_APPEND);
-
 
 if (
     isset($data["nama"]) &&
