@@ -3,6 +3,8 @@ include "config.php";
 header("Content-Type: application/json");
 
 $data = json_decode(file_get_contents("php://input"), true);
+file_put_contents("log.txt", file_get_contents("php://input"), FILE_APPEND);
+
 
 if (
     isset($data["nama"]) &&
@@ -23,6 +25,11 @@ if (
     }
 
     $query->close();
+
+    $relquery = $conn->prepare("DELETE FROM mahasiswa_quiz WHERE namaQuiz = ? AND kodeKelas = ?");
+    $relquery->bind_param("ss", $nama, $kodeKelas);
+    $relquery->execute();
+    $relquery->close();
 } else {
     echo json_encode(["success" => false, "message" => "Parameter tidak lengkap."]);
 }

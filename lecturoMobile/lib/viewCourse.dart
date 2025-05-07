@@ -91,7 +91,7 @@ class _ViewCourseState extends State<ViewCourse> {
     }
   }
 
-  void addQuiz(BuildContext context) async {
+  Future<void> addQuiz(BuildContext context) async {
     var url = Uri.parse('http://10.0.2.2/lecturo/addQuiz.php');
     var response = await http.post(
       url,
@@ -103,6 +103,11 @@ class _ViewCourseState extends State<ViewCourse> {
         'kodeKelas': widget.kodeKelas,
       }),
     );
+
+    print("nama : ${nameController.text}");
+    print("deskripsi: ${deskripsiController.text}");
+    print("kodeMatkul : ${widget.kodeMatkul}");
+    print("kodeKelas : ${widget.kodeKelas}");
 
     if (response.statusCode == 200) {
       Navigator.of(context, rootNavigator: true).pop();
