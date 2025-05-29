@@ -8,23 +8,24 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 
-if (isset($data["kode"])) {
+if (isset($data["kode"]) && isset($data["tahun"])) {
     $kode = $data["kode"];
+    $tahun = $data["tahun"];
 
-    $query = $conn->prepare("SELECT * FROM course WHERE dosenPengampu = ?");
-    $query->bind_param("s", $kode);
+    $query = $conn->prepare("SELECT * FROM course WHERE dosenPengampu = ? AND tahunAjaran = ?");
+    $query->bind_param("ss", $kode, $tahun);
     $query->execute();
     $result = $query->get_result();
 
+    $courses = [];
     if ($result->num_rows > 0) {
-        $courses = [];
         while ($row = $result->fetch_assoc()) {
             $courses[] = $row;
         }
         echo json_encode(["success" => true, "course" => $courses]);
     }
      else {
-        echo json_encode(["success" => false, "message" => "Kode dosen tidak tersedia"]);
+        echo json_encode(["success" => false, "course" => $courses]);
     }
 
     $query->close();
