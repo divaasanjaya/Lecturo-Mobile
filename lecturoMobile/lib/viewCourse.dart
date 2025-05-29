@@ -104,11 +104,6 @@ class _ViewCourseState extends State<ViewCourse> {
       }),
     );
 
-    print("nama : ${nameController.text}");
-    print("deskripsi: ${deskripsiController.text}");
-    print("kodeMatkul : ${widget.kodeMatkul}");
-    print("kodeKelas : ${widget.kodeKelas}");
-
     if (response.statusCode == 200) {
       Navigator.of(context, rootNavigator: true).pop();
       nameController.clear();
