@@ -67,38 +67,18 @@ class _ViewMahasiswaPageState extends State<ViewMahasiswaPage> {
   void initState() {
     super.initState();
     selectedKelas = widget.kodeKelas;
-    _fetchKelas();
     _fetchMahasiswa();
-  }
-
-  Future<void> _fetchKelas() async {
-    try {
-      final response = await http.get(
-        Uri.parse('http://10.0.2.2/lecturo/getKelasList.php'),
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['success'] == true) {
-          setState(() {
-            kelasList = List<String>.from(data['kelas']);
-            if (kelasList.isNotEmpty) {
-              selectedKelas = kelasList.first;
-            }
-          });
-        }
-      }
-    } catch (e) {
-      print('Error fetching kelas: $e');
-    }
   }
 
   Future<void> _fetchMahasiswa() async {
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2/lecturo/getInfoMahasiswa.php'),
+        Uri.parse('http://10.0.2.2:8000/api/mahasiswa'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'kodeMatkul': widget.kodeMatkul}),
+        body: jsonEncode({
+          'kodeMatkul': widget.kodeMatkul,
+          'kodeKelas': widget.kodeKelas,
+        }),
       );
 
       if (response.statusCode == 200) {
@@ -129,14 +109,15 @@ class _ViewMahasiswaPageState extends State<ViewMahasiswaPage> {
   Future<void> _addMahasiswa() async {
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2/lecturo/updaddMahasiswa.php'),
+        Uri.parse('http://10.0.2.2:8000/api/mahasiswa/save'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'NIM': _nimController.text,
           'nama': _namaController.text,
-          'kodeKelas': selectedKelas,
+          'kodeKelas': widget.kodeKelas,
         }),
       );
+      print("error : ${response.body}");
 
       if (response.statusCode == 200) {
         final result = json.decode(response.body);
@@ -169,7 +150,7 @@ class _ViewMahasiswaPageState extends State<ViewMahasiswaPage> {
   Future<void> _deleteMahasiswa(String nim) async {
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2/lecturo/delMahasiswa.php'),
+        Uri.parse('http://10.0.2.2:8000/api/mahasiswa/delete'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'NIM': nim, 'kodeMatkul': widget.kodeMatkul}),
       );

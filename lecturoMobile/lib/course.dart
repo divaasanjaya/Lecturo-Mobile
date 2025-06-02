@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'viewCourse.dart';
 import 'dart:convert';
-import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -37,7 +37,6 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<Map<String, dynamic>> course = [];
-  final Dio _dio = Dio();
   String? errorMessage;
   String selectedSemester = 'Genap 2024/2025';
 
@@ -49,12 +48,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> fetchKodeCourse() async {
     try {
-      final response = await _dio.post(
-        "http://10.0.2.2/lecturo/getCourse.php",
-        data: {"kode": widget.kodePengampu, "tahun": selectedSemester},
+      final response = await http.post(
+        Uri.parse("http://10.0.2.2:8000/api/course"),
+        body: {"kode": widget.kodePengampu, "tahun": selectedSemester},
       );
 
-      final data = response.data;
+      final data = jsonDecode(response.body);
       if (data["success"]) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString("course", jsonEncode(data["course"]));
@@ -71,9 +70,7 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        errorMessage = "Kode atau password Anda salah!";
-      });
+      print('Error connecting to Laravel backend: $e');
     }
   }
 

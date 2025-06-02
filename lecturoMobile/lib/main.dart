@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dashboard.dart';
+import 'dart:convert';
 
 void main() {
   runApp(MyApp());
@@ -27,42 +28,54 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _kodeController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final Dio _dio = Dio();
   String kode = '';
   String? errorMessage;
 
   Future<void> login() async {
+    final url = Uri.parse("http://10.0.2.2:8000/api/login");
+
     try {
-      final response = await _dio.post(
-        "http://10.0.2.2/lecturo/login.php",
-        data: {
+      final response = await http.post(
+        url,
+        body: {
           "kode": _kodeController.text,
           "password": _passwordController.text,
         },
       );
 
-      final data = response.data;
-      if (data["success"]) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString("kode", data["dosen"]["kode"]);
-        await prefs.setString("nama", data["dosen"]["nama"]);
-        kode = data["dosen"]["kode"];
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => DashboardPage(kode: kode)),
-        );
+        if (data["success"] == true) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString("kode", data["dosen"]["kode"]);
+          await prefs.setString("nama", data["dosen"]["nama"]);
+          kode = data["dosen"]["kode"];
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => DashboardPage(kode: kode)),
+          );
+        } else {
+          if (!mounted) return;
+          setState(() {
+            errorMessage = data["message"];
+          });
+        }
       } else {
         if (!mounted) return;
         setState(() {
-          errorMessage = data["message"];
+          errorMessage = "Server error: ${response.statusCode}";
         });
+        print("Login gagal - Status: ${response.statusCode}");
+        print("Body: ${response.body}");
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        errorMessage = "Kode atau password Anda salah!";
+        errorMessage = "Gagal login. Silakan coba lagi.";
       });
+      print("Login error: $e");
     }
   }
 

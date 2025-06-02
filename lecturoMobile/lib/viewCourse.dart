@@ -66,8 +66,8 @@ class _ViewCourseState extends State<ViewCourse> {
     super.dispose();
   }
 
-  void getQuiz() async {
-    var url = Uri.parse('http://10.0.2.2/lecturo/getInfoQuiz.php');
+  Future<void> getQuiz() async {
+    var url = Uri.parse("http://10.0.2.2:8000/api/quiz");
     var response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -92,7 +92,7 @@ class _ViewCourseState extends State<ViewCourse> {
   }
 
   Future<void> addQuiz(BuildContext context) async {
-    var url = Uri.parse('http://10.0.2.2/lecturo/addQuiz.php');
+    var url = Uri.parse("http://10.0.2.2:8000/api/quiz/add");
     var response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -115,7 +115,7 @@ class _ViewCourseState extends State<ViewCourse> {
   }
 
   void deleteQuiz(String nama) async {
-    var url = Uri.parse('http://10.0.2.2/lecturo/delQuiz.php');
+    var url = Uri.parse("http://10.0.2.2:8000/api/quiz/delete");
     var response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -134,13 +134,10 @@ class _ViewCourseState extends State<ViewCourse> {
   }
 
   Future<void> fetchDosenKoor() async {
+    final kode = widget.kodeMatkul;
+    final url = Uri.parse("http://10.0.2.2:8000/api/dosen-koor/$kode");
     try {
-      var url = Uri.parse('http://10.0.2.2/lecturo/getDosenKoor.php');
-      var response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({'kode': widget.kodeMatkul}),
-      );
+      final response = await http.get(url);
 
       var data = json.decode(response.body);
       if (data["success"]) {
@@ -159,22 +156,16 @@ class _ViewCourseState extends State<ViewCourse> {
         });
       }
     } catch (e) {
-      setState(() {
-        errorMessage = "Error fetching coordinator data";
-      });
+      print('Error connecting to Laravel backend: $e');
     }
   }
 
   Future<void> fetchKodeDosen2() async {
     try {
-      var url = Uri.parse('http://10.0.2.2/lecturo/getDosen.php');
-      var response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({'kode': kodeDosenKoor}),
-      );
-
-      var data = json.decode(response.body);
+      var url = Uri.parse("http://10.0.2.2:8000/api/dosen/$kodeDosenKoor");
+      var response = await http.get(url);
+      print("error response: ${response.body}");
+      final data = json.decode(response.body);
       if (data["success"]) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString("dosen", jsonEncode(data["dosen"]));
@@ -196,13 +187,10 @@ class _ViewCourseState extends State<ViewCourse> {
   }
 
   Future<void> fetchKodeDosen() async {
+    final kode = widget.kodeDosen;
     try {
-      var url = Uri.parse('http://10.0.2.2/lecturo/getDosen.php');
-      var response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({'kode': widget.kodeDosen}),
-      );
+      var url = Uri.parse("http://10.0.2.2:8000/api/dosen/$kode");
+      var response = await http.get(url);
 
       var data = json.decode(response.body);
       if (data["success"]) {
@@ -226,15 +214,14 @@ class _ViewCourseState extends State<ViewCourse> {
 
   Future<void> fetchKodeCourse() async {
     try {
-      var url = Uri.parse('http://10.0.2.2/lecturo/getCourse2.php');
+      var url = Uri.parse("http://10.0.2.2:8000/api/course2");
       var response = await http.post(
         url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
+        body: {
           "kodeMatkul": widget.kodeMatkul,
           "kodeDosen": widget.kodeDosen,
           "kodeKelas": widget.kodeKelas,
-        }),
+        },
       );
 
       var data = json.decode(response.body);

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'viewAbdimas.dart';
 import 'dart:convert';
-import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -34,7 +34,6 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<Map<String, dynamic>> abdimas = [];
-  final Dio _dio = Dio();
   String? errorMessage;
   String? menu;
   int? kodeAbdimas;
@@ -47,49 +46,48 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> delAbdimas() async {
     try {
-      final response = await _dio.post(
-        "http://10.0.2.2/lecturo/delAbdimas.php",
-        data: {"kodeDosen": widget.kodeDosen, "kodeAbdimas": kodeAbdimas},
+      final response = await http.post(
+        Uri.parse("http://10.0.2.2:8000/api/abdimas/delete"),
+        body: {
+          "kodeDosen": widget.kodeDosen,
+          "kodeAbdimas": kodeAbdimas.toString(),
+        },
       );
-      print(response.data);
+      print(response.body);
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        errorMessage = "Kode atau password Anda salah!";
-      });
+      print('Error connecting to Laravel backend: $e');
     }
   }
 
   Future<void> updateAbdimas() async {
     try {
-      final response = await _dio.post(
-        "http://10.0.2.2/lecturo/updaddAbdimas.php",
-        data: {
+      final response = await http.post(
+        Uri.parse("http://10.0.2.2:8000/api/abdimas/save"),
+        body: {
           "kodeDosen": widget.kodeDosen,
           "menu": menu,
-          "kode": kodeAbdimas,
+          "kode": kodeAbdimas?.toString() ?? '',
           "nama": judulInput.text,
           "deskripsi": deskripsiInput.text,
           "tanggal": tanggalInput.text,
         },
       );
-      print(response.data);
+      print(response.body);
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        errorMessage = "Kode atau password Anda salah!";
-      });
+      print('Error connecting to Laravel backend: $e');
     }
   }
 
   Future<void> fetchKodeAbdimas() async {
     try {
-      final response = await _dio.post(
-        "http://10.0.2.2/lecturo/getAbdimas.php",
-        data: {"kode": widget.kodeDosen},
+      final response = await http.post(
+        Uri.parse("http://10.0.2.2:8000/api/abdimas"),
+        body: {"kode": widget.kodeDosen},
       );
 
-      final data = response.data;
+      final data = jsonDecode(response.body);
       if (data["success"]) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString("abdimas", jsonEncode(data["abdimas"]));

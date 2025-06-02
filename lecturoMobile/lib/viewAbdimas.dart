@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'abdimas.dart';
 import 'dart:convert';
-import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -39,7 +39,6 @@ class LectureScreen extends StatefulWidget {
 }
 
 class _LectureScreenState extends State<LectureScreen> {
-  final Dio _dio = Dio();
   String? errorMessage;
   String namaAbdimas = '';
   String namaDosen = '';
@@ -55,13 +54,13 @@ class _LectureScreenState extends State<LectureScreen> {
   }
 
   Future<void> fetchKodeDosen() async {
+    final kode = widget.kodeDosen;
     try {
-      final response = await _dio.post(
-        "http://10.0.2.2/lecturo/getDosen.php",
-        data: {"kode": widget.kodeDosen},
+      final response = await http.get(
+        Uri.parse("http://10.0.2.2:8000/api/dosen/$kode"),
       );
 
-      final data = response.data;
+      final data = jsonDecode(response.body);
       if (data["success"]) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString("dosen", jsonEncode(data["dosen"]));
@@ -86,13 +85,13 @@ class _LectureScreenState extends State<LectureScreen> {
   }
 
   Future<void> fetchKodeAbdimas() async {
+    final kode = widget.kodeAbdimas;
     try {
-      final response = await _dio.post(
-        "http://10.0.2.2/lecturo/getInfoAbdimas.php",
-        data: {"kode": widget.kodeAbdimas},
+      final response = await http.get(
+        Uri.parse("http://10.0.2.2:8000/api/abdimas/$kode"),
       );
 
-      final data = response.data;
+      final data = jsonDecode(response.body);
       if (data["success"]) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString("abdimas", jsonEncode(data["abdimas"]));

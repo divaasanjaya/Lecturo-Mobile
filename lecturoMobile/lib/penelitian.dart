@@ -1,7 +1,8 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'viewPenelitian.dart';
+import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -34,7 +35,6 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<Map<String, dynamic>> penelitian = [];
-  final Dio _dio = Dio();
   String? errorMessage;
   int? kodePenelitian;
   String? menu;
@@ -47,27 +47,29 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> delPenelitian() async {
     try {
-      final response = await _dio.post(
-        "http://10.0.2.2/lecturo/delPenelitian.php",
-        data: {"kodeDosen": widget.kodeDosen, "kodePenelitian": kodePenelitian},
+      final response = await http.post(
+        Uri.parse("http://10.0.2.2:8000/api/penelitian/delete"),
+        body: {
+          "kodeDosen": widget.kodeDosen,
+          "kodePenelitian": kodePenelitian.toString(),
+        },
       );
-      print(response.data);
+      print(response.body);
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        errorMessage = "Kode atau password Anda salah!";
-      });
+      print('Error connecting to Laravel backend: $e');
     }
+    print("delete error: $errorMessage");
   }
 
   Future<void> updatePenelitian() async {
     try {
-      final response = await _dio.post(
-        "http://10.0.2.2/lecturo/updaddPenelitian.php",
-        data: {
+      final response = await http.post(
+        Uri.parse("http://10.0.2.2:8000/api/penelitian/save"),
+        body: {
           "kodeDosen": widget.kodeDosen,
           "menu": menu,
-          "kode": kodePenelitian,
+          "kode": kodePenelitian?.toString() ?? '',
           "nama": judulInput.text,
           "bidang": bidangInput.text,
           "deskripsi": deskripsiInput.text,
@@ -75,23 +77,19 @@ class _MyHomePageState extends State<MyHomePage> {
           "tautan": urlInput.text,
         },
       );
-      print(response.data);
+      print(response.body);
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        errorMessage = "Kode atau password Anda salah!";
-      });
+      print('Error connecting to Laravel backend: $e');
     }
   }
 
   Future<void> fetchKodePenelitian() async {
+    final url = Uri.parse("http://10.0.2.2:8000/api/penelitian");
     try {
-      final response = await _dio.post(
-        "http://10.0.2.2/lecturo/getPenelitian.php",
-        data: {"kode": widget.kodeDosen},
-      );
+      final response = await http.post(url, body: {"kode": widget.kodeDosen});
 
-      final data = response.data;
+      final data = jsonDecode(response.body);
       if (data["success"]) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString("penelitian", jsonEncode(data["penelitian"]));
@@ -109,7 +107,7 @@ class _MyHomePageState extends State<MyHomePage> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        errorMessage = "Kode atau password Anda salah!";
+        errorMessage = "tidak ada penelitian!";
       });
     }
   }

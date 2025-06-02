@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'viewCourse.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -52,7 +51,6 @@ class NilaiPage extends StatefulWidget {
 class _NilaiPageState extends State<NilaiPage> {
   List<Map<String, dynamic>> mquiz = [];
   String? nama;
-  final Dio _dio = Dio();
   String? errorMessage;
   String kodePengampu = '';
 
@@ -65,12 +63,16 @@ class _NilaiPageState extends State<NilaiPage> {
 
   Future<void> fetchNilai() async {
     try {
-      final response = await _dio.post(
-        "http://10.0.2.2/lecturo/getNilai.php",
-        data: {"nama": widget.nama, "kodeKelas": widget.kodeKelas},
+      final response = await http.post(
+        Uri.parse("http://10.0.2.2:8000/api/quiz/nilai"),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: jsonEncode({"nama": widget.nama, "kodeKelas": widget.kodeKelas}),
       );
 
-      final data = response.data;
+      final data = jsonDecode(response.body);
       if (data["success"]) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString("mquiz", jsonEncode(data["mquiz"]));
@@ -90,32 +92,36 @@ class _NilaiPageState extends State<NilaiPage> {
       setState(() {
         errorMessage = "Kode atau password Anda salah!";
       });
+      print("Nilai error: $e");
     }
   }
 
   Future<void> updelNilai(int nim, int nilai) async {
     try {
-      final response = await _dio.post(
-        "http://10.0.2.2/lecturo/updelNilai.php",
-        data: {
-          "nim": nim,
+      final response = await http.post(
+        Uri.parse("http://10.0.2.2:8000/api/quiz/editnilai"),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: jsonEncode({
+          "nim": nim.toString(),
           "namaQuiz": widget.nama,
           "kodeKelas": widget.kodeKelas,
           "nilai": nilai,
-        },
+        }),
       );
-      print(response.data);
+      print(response.body);
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        errorMessage = "Kode atau password Anda salah!";
-      });
+      print("error: $e");
     }
   }
 
   Future<void> fetchKodeCourse() async {
     try {
-      var url = Uri.parse('http://10.0.2.2/lecturo/getCourse2.php');
+      var url = Uri.parse("http://10.0.2.2:8000/api/course2");
+      ;
       var response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},

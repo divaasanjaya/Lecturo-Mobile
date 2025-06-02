@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'penelitian.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
-import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -43,7 +43,6 @@ class LectureScreen extends StatefulWidget {
 }
 
 class _LectureScreenState extends State<LectureScreen> {
-  final Dio _dio = Dio();
   String? errorMessage;
   String namaPenelitian = '';
   String namaDosen = '';
@@ -61,13 +60,13 @@ class _LectureScreenState extends State<LectureScreen> {
   }
 
   Future<void> fetchKodeDosen() async {
+    final kode = widget.kodeDosen;
     try {
-      final response = await _dio.post(
-        "http://10.0.2.2/lecturo/getDosen.php",
-        data: {"kode": widget.kodeDosen},
+      final response = await http.get(
+        Uri.parse("http://10.0.2.2:8000/api/dosen/$kode"),
       );
 
-      final data = response.data;
+      final data = jsonDecode(response.body);
       if (data["success"]) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString("dosen", jsonEncode(data["dosen"]));
@@ -89,16 +88,17 @@ class _LectureScreenState extends State<LectureScreen> {
         errorMessage = "Kode atau password Anda salah!";
       });
     }
+    print("get info error $errorMessage");
   }
 
   Future<void> fetchKodePenelitian() async {
+    final kode = widget.kodePenelitian;
     try {
-      final response = await _dio.post(
-        "http://10.0.2.2/lecturo/getInfoPenelitian.php",
-        data: {"kode": widget.kodePenelitian},
+      final response = await http.get(
+        Uri.parse("http://10.0.2.2:8000/api/penelitian/$kode"),
       );
 
-      final data = response.data;
+      final data = jsonDecode(response.body);
       if (data["success"]) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString("penelitian", jsonEncode(data["penelitian"]));
