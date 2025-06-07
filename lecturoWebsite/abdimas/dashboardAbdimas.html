@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Lecturo - Dashboard Abdimas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #004643;
+            color: #ffffff;
+        }
+        .navbar {
+            background-color: #004643;
+        }
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            font-weight: bolder;
+        }
+        .navbar-brand .circle {
+            width: 15px;
+            height: 15px;
+            background-color: #F9BC60;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .course-card {
+            background-color: #FFFFFF;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .quiz-card {
+            background-color: #ABD1C6;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .quiz-icon {
+            background-color: #004643;
+            padding: 5px 10px;
+            color: #ABD1C6;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="dashboard.html">
+                <div class="circle"></div>
+                Lecturo
+            </a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="..Course/viewCourse.html">Mata Kuliah</a></li>
+                    <li class="nav-item"><a class="nav-link" href="../penelitian/viewPenelitian.html">Penelitian</a></li>
+                    <li class="nav-item"><a class="nav-link" href="viewAbdimas.html">Pengabdian Masyarakat</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Konten -->
+    <div class="container mt-5" id="content">
+        <div class="text-center text-white">
+            Memuat data Abdimas... 
+        </div>
+    </div>
+
+    <script>
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        function formatTanggal(tanggalStr) {
+            const bulan = [
+                'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+            ];
+            const date = new Date(tanggalStr);
+            const day = date.getDate();
+            const month = bulan[date.getMonth()];
+            const year = date.getFullYear();
+            return `${day} ${month} ${year}`;
+        }
+
+        async function fetchDosen(kodeDosen) {
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/api/dosen/${kodeDosen}`, {
+                    method: 'GET'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Fetch dosen error:', error);
+                return null;
+            }
+        }
+
+        async function fetchAbdimas(kode) {
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/api/abdimas/${kode}`, {
+                    method: 'GET'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Fetch error:', error);
+                return null;
+            }
+        }
+
+        async function tampilkanAbdimas() {
+            const kode = getQueryParam('kode');
+            const kodeDosen = localStorage.getItem("kode");
+            const container = document.getElementById('content');
+
+            if (!kode) {
+                container.innerHTML = '<div class="alert alert-danger text-center">Kode tidak ditemukan di URL</div>';
+                return;
+            }
+
+            const result = await fetchAbdimas(kode);
+            const dosenResult = await fetchDosen(kodeDosen);
+            console.log("Data dari API:", result);
+
+            if (!result || !result.abdimas) {
+                container.innerHTML = `<div class="alert alert-warning text-center">Data Abdimas tidak ditemukan untuk kode <b>${kode}</b></div>`;
+                return;
+            }
+
+            const abdimas = result.abdimas;
+            const dosen = dosenResult.dosen;
+
+            container.innerHTML = `
+                <div class="course-card d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="fw-bold text-dark">${abdimas.nama}</h4>
+                        <p class="text-dark mb-1">${formatTanggal(abdimas.tanggal)}</p>
+                        <br><br><br>
+                        <p class="fw-bold text-dark mb-1">Dosen pembimbing: ${dosen.nama} [${dosen.kode}]</p>
+                    </div>
+                </div>
+
+                <div class="col-md-13 mb-4 mt-4">
+                    <div class="quiz-card d-flex flex-column">
+                        <div class="d-flex align-items-center">
+                            <div class="quiz-icon d-flex align-items-center justify-content-center rounded-circle me-3">
+                                <i class="bi bi-card-text"></i>
+                            </div>
+                            <h5 class="pb-2 mt-1 mb-2 fw-bold text-dark border-bottom border-white flex-grow-1">Deskripsi</h5>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <div class="flex-grow-1">
+                                <p class="mb-1 text-muted small">${abdimas.deskripsi}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        tampilkanAbdimas();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
