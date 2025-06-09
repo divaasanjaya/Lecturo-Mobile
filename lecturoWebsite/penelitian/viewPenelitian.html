@@ -56,6 +56,39 @@
 
     <!-- Fetch Penelitian Data -->
     <script>
+        async function hapusPenelitian(kodePenelitian) {
+            const konfirmasi = confirm("Apakah Anda yakin ingin menghapus penelitian ini?");
+            if (!konfirmasi) return;
+
+            const kodeDosen = localStorage.getItem("kode");
+            if (!kodeDosen) {
+            alert("Kode Dosen tidak ditemukan. Silakan login ulang.");
+            return;
+            }
+
+            try {
+            const response = await fetch("http://127.0.0.1:8000/api/penelitian/delete", {
+                method: "POST",
+                headers: {
+                "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                kodeDosen: kodeDosen,
+                kodePenelitian: parseInt(kodePenelitian)
+                })
+            });
+
+            const result = await response.json();
+            if (response.ok && result.success) {
+                alert("Penelitian berhasil dihapus!");
+                window.location.reload(); // reload data setelah delete
+            } else {
+                alert("Gagal menghapus penelitian: " + (result.message || "Terjadi kesalahan"));
+            }
+            } catch (err) {
+            alert("Terjadi kesalahan saat mengirim permintaan: " + err.message);
+            }
+        }
         // Ambil nilai kode dari PHP session (disisipkan sebagai JavaScript variable)
         const kode = localStorage.getItem("kode");
         const penelitianContainer = document.getElementById("penelitianContainer");
@@ -87,12 +120,13 @@
                                         <a href='editPenelitian.html?kode=${item.kode}' class="btn btn-sm btn-transparent me-1" title="Edit">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <form method="POST" action='../controller/penelitianController.html?menu=del'>
-                                            <input type='hidden' name='kode' value='${item.kode}'>
-                                            <button type='submit' class='btn btn-sm btn-transparent' onclick="return confirm('Apakah Anda yakin ingin menghapus penelitian ini?');">
-                                                <i class="bi bi-trash3"></i>
-                                            </button>
-                                        </form>
+                                        <button 
+                                            type="button" 
+                                            class="btn btn-sm btn-transparent" 
+                                            onclick="hapusPenelitian('${item.kode}')"
+                                        >
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
