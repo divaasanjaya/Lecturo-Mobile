@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Lecturo - Edit Nilai Quiz</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" 
+          rel="stylesheet" 
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" 
+          crossorigin="anonymous">
+    <style>
+        body {
+            background-color: #004643;
+            color: #fff;
+        }
+        .navbar {
+            background-color: #004643;
+        }
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            font-weight: bolder;
+        }
+        .navbar-brand .circle {
+            width: 15px;
+            height: 15px;
+            background-color: #F9BC60;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .modal-content {
+            background-color: #ABD1C6;
+            border-radius: 10px;
+        }
+        .btn-create {
+            background-color: #F9BC60;
+            color: #004643;
+            font-weight: bold;
+        }
+        .btn-create:hover {
+            background-color: #e9a932;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <div class="circle"></div>
+                Lecturo
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
+                    data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" 
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#">Mata Kuliah</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Penelitian</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Pengabdian Masyarakat</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container d-flex justify-content-center align-items-center p-4">
+        <div class="modal-content p-5 shadow-lg w-50">
+            <h3 class="mb-4 fw-bold text-dark text-center">Edit Nilai Quiz</h3>
+            <div class="p-0 text-black">
+                <p>NIM : <span id="nimDisplay"></span></p>
+                <p>Nama: <span id="namaDisplay"></span></p>
+            </div>
+
+            <!-- Form -->
+            <form id="editQuizForm">
+                <input type="hidden" id="nim" name="nim">
+                <input type="hidden" id="nama" name="nama">
+                
+                <div class="mb-3">
+                    <label for="namaQuiz" class="form-label text-dark">Nama Quiz</label>
+                    <input type="text" class="form-control" id="namaQuiz" name="namaQuiz" readonly required>
+                </div>
+                <div class="mb-3">
+                    <label for="kodeKelas" class="form-label text-dark">Kode Kelas</label>
+                    <input type="text" class="form-control" id="kodeKelas" name="kodeKelas" readonly required>
+                </div>
+                <div class="mb-3">
+                    <label for="nilaiQuiz" class="form-label text-dark">Nilai Quiz</label>
+                    <input type="number" class="form-control" id="nilaiQuiz" name="nilaiQuiz" required>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="text-center">
+                    <button type="submit" class="btn btn-create w-100">Edit</button>
+                </div>
+            </form>
+            <div id="responseMessage" class="mt-3 text-center fw-bold text-dark"></div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" 
+            crossorigin="anonymous"></script>
+
+    <!-- JavaScript -->
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        window.addEventListener("DOMContentLoaded", () => {
+            const params = new URLSearchParams(window.location.search);
+            const nim = params.get("nim");
+            const nama = params.get("nama");
+            const namaQuiz = params.get("namaQuiz");
+            const kodeKelas = params.get("kodeKelas");
+            const nilai = params.get("nilai");
+
+            const msgEl = document.getElementById("responseMessage");
+
+            if (!nim || !nama || !namaQuiz || !kodeKelas) {
+                msgEl.textContent = "Parameter URL tidak lengkap.";
+                msgEl.style.color = "red";
+                document.getElementById("editQuizForm").style.display = "none";
+                return;
+            }
+
+            document.getElementById("nim").value = nim;
+            document.getElementById("nama").value = nama;
+            document.getElementById("namaQuiz").value = namaQuiz;
+            document.getElementById("kodeKelas").value = kodeKelas;
+            document.getElementById("nilaiQuiz").value = nilai;
+
+            document.getElementById("nimDisplay").textContent = nim;
+            document.getElementById("namaDisplay").textContent = nama;
+        });
+
+        document.getElementById("editQuizForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const nim = document.getElementById("nim").value.trim();
+            const namaQuiz = document.getElementById("namaQuiz").value.trim();
+            const kodeKelas = document.getElementById("kodeKelas").value.trim();
+            const nilai = parseInt(document.getElementById("nilaiQuiz").value.trim());
+            const kodeMK = params.get("kodeMK");
+
+            const payload = {
+                nim: nim,
+                namaQuiz: namaQuiz,
+                kodeKelas: kodeKelas,
+                nilai: nilai
+            };
+
+            try {
+                const response = await fetch("http://127.0.0.1:8000/api/quiz/editnilai", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                const msgEl = document.getElementById("responseMessage");
+
+                if (response.ok) {
+                    alert("Nilai Quiz berhasil diperbaharui!");
+                    window.location.href = `nilaiQuiz.html?kodeMK=${kodeMK}&&kodeKelas=${kodeKelas}&&namaQuiz=${namaQuiz}`;
+                } else {
+                    msgEl.textContent = "Gagal menyimpan: " + (result.message || "Terjadi kesalahan.");
+                    msgEl.style.color = "red";
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                const msgEl = document.getElementById("responseMessage");
+                msgEl.textContent = "Terjadi kesalahan jaringan.";
+                msgEl.style.color = "red";
+            }
+        });
+    </script>
+</body>
+</html>

@@ -40,12 +40,18 @@ class QuizController extends Controller
 
             // Ambil mahasiswa yang mengambil matkul dan kelas terkait
             $mahasiswa = DB::table('course_mahasiswa as cm')
-                ->join('course as c', 'cm.kodeMatkul', '=', 'c.kodeMatkul')
+                ->join('course as c', function ($join) {
+                    $join->on('cm.kodeMatkul', '=', 'c.kodeMatkul');
+                    // Tidak bisa join kodeKelas di cm karena tidak ada
+                })
+                ->join('mahasiswa', function ($join) {
+                    $join->on('cm.nim', '=', 'mahasiswa.nim');
+                })
                 ->where('cm.kodeMatkul', $request->kodeMatkul)
                 ->where('c.kodeKelas', $request->kodeKelas)
+                ->whereColumn('c.kodeKelas', 'mahasiswa.kodeKelas')  // pastikan kodeKelas course dan mahasiswa sama
                 ->select('cm.nim')
                 ->get();
-
             // Masukkan data ke tabel mahasiswa_quiz
             foreach ($mahasiswa as $mhs) {
                 DB::table('mahasiswa_quiz')->insert([

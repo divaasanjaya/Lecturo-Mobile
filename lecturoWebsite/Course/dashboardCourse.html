@@ -30,11 +30,19 @@
   </style>
 </head>
 <body>
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a id="navLecturo" class="navbar-brand" href="#">
+            <div class="circle"></div>
+            Lecturo
+        </a>
+    </div>
+</nav>
   <nav class="navbar navbar-expand-lg navbar-dark mb-4">
     <div class="container">
         <div class="d-flex justify-space-between align-items-center mb-4 gap-3">
             <a href="#" class="active-button fw-bold">Activity</a>
-            <a href="#" class="passive-button fw-bold">Mahasiswa</a>
+            <a href="#" id="linkMahasiswa" class="passive-button fw-bold">Mahasiswa</a>
             <a href="#" class="passive-button fw-bold">Nilai</a>
         </div>
     </div>
@@ -65,7 +73,6 @@
             <a href="#" id="koorInfo" class="text-dark" data-bs-toggle="modal" data-bs-target="#dosenKoorModal">${dosenKoor.nama} [${dosenKoor.kode}]</a>
           </p>
 
-          <!-- Modal Popup -->
           <div class="modal fade" id="dosenKoorModal" tabindex="-1" aria-labelledby="dosenKoorModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
               <div class="modal-content custom-modal">
@@ -89,7 +96,6 @@
         </div>
       `;
 
-      // Tambahkan tombol "Create Quiz"
       const createBtnContainer = document.createElement("div");
       createBtnContainer.className = "mt-5 text-start";
       createBtnContainer.innerHTML = `
@@ -126,24 +132,51 @@
     }
 
     async function deleteQuiz(nama, kodeMatkul, kodeKelas) {
-      if (!confirm(`Apakah Anda yakin ingin menghapus quiz "${nama}"?`)) return;
+        if (!confirm(`Yakin ingin menghapus quiz "${nama}"?`)) return;
 
+        try {
+            const response = await fetch("http://127.0.0.1:8000/api/quiz/delete", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                nama: nama,
+                kodeMatkul: kodeMatkul,
+                kodeKelas: kodeKelas
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert("Quiz berhasil dihapus.");
+                // Reload atau refresh data quiz
+                location.reload(); // atau panggil fungsi getQuizList() kalau ada
+            } else {
+                alert("Gagal menghapus quiz.");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("Terjadi kesalahan saat menghapus quiz.");
+        }
+    }
+
+    async function fetchQuizzes(kodeMatkul, kodeKelas) {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/deleteQuiz", {
+        const res = await fetch("http://127.0.0.1:8000/api/quiz", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ kodeMatkul, kodeKelas, nama })
+          body: JSON.stringify({ kodeMatkul, kodeKelas })
         });
+
+        if (!res.ok) throw new Error("Gagal mengambil data quiz");
+
         const result = await res.json();
-        if (result.success) {
-          alert("Quiz berhasil dihapus.");
-          location.reload();
-        } else {
-          alert("Gagal menghapus quiz.");
-        }
+        if (!Array.isArray(result.quiz)) throw new Error("Format data quiz tidak valid");
+
+        renderQuizzes(result.quiz, kodeMatkul, kodeKelas);
       } catch (err) {
-        console.error(err);
-        alert("Terjadi kesalahan saat menghapus quiz.");
+        console.error("Error saat mengambil quiz:", err);
+        alert("Gagal memuat data quiz.");
       }
     }
 
@@ -157,6 +190,11 @@
         alert("Parameter kurang lengkap!");
         return;
       }
+
+      const mahasiswaLink = document.getElementById("linkMahasiswa");
+      mahasiswaLink.href = `mahasiswa/viewMahasiswa.html?kodeMK=${encodeURIComponent(kodeMatkul)}&kodeKelas=${encodeURIComponent(kodeKelas)}`;
+      const lecturoLink = document.getElementById("navLecturo");
+      lecturoLink.href = `../dashboard.html`;
 
       try {
         const response = await fetch("http://127.0.0.1:8000/api/course2", {
@@ -177,7 +215,7 @@
         const dosenKoor = resDosenKoor.dosen;
 
         renderCourse(course, dosenPengampu, dosenKoor, koorRes, kodeMatkul, kodeKelas);
-        renderQuizzes(course.quizzes || [], kodeMatkul, kodeKelas);
+        await fetchQuizzes(kodeMatkul, kodeKelas);
       } catch (err) {
         console.error(err);
         alert("Gagal memuat data course.");
