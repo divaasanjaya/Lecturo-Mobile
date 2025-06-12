@@ -8,6 +8,9 @@ use App\Http\Controllers\MahasiswaController;
 use App\Http\Controllers\AbdimasController;
 use App\Http\Controllers\PenelitianController;
 use App\Http\Controllers\MasterController;
+use App\Http\Controllers\OpenAIController;
+
+Route::post('/send-message', [OpenAIController::class, 'sendMessage']);
 
 // AUTH
 Route::post('/login', [AuthController::class, 'login']);

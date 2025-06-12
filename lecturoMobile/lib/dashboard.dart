@@ -42,6 +42,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String kode = '';
   final Dio _dio = Dio();
   String? errorMessage;
+  List<String> messages = [];
 
   @override
   void initState() {
@@ -81,6 +82,193 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Future<void> sendMessage({
+    required String message,
+    required void Function(String botResponse) onResult,
+    void Function(String error)? onError,
+  }) async {
+    try {
+      final response = await _dio.post(
+        "http://10.0.2.2:8000/api/send-message",
+        data: {"message": message},
+      );
+
+      final data = response.data;
+
+      if (data.containsKey("response") && data["response"] != null) {
+        onResult(data["response"]);
+      } else {
+        onError?.call("Invalid response from server");
+      }
+    } catch (e) {
+      onError?.call("Unable to send message (${e.toString()})");
+    }
+  }
+
+  void showChatPopup(BuildContext context) {
+    TextEditingController chatController = TextEditingController();
+    List<Map<String, String>> localMessages = [
+      {"sender": "bot", "text": "Halo! Ada yang bisa saya bantu?"},
+    ];
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Container(
+                height: 400,
+                width: 320,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.white,
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF004643),
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(12),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Lecturo AI',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => Navigator.of(context).pop(),
+                            child: Icon(Icons.close, color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: Container(
+                        padding: EdgeInsets.all(12),
+                        child: ListView.builder(
+                          itemCount: localMessages.length,
+                          itemBuilder: (context, index) {
+                            final message = localMessages[index];
+                            bool isBot = message['sender'] == 'bot';
+                            return Align(
+                              alignment:
+                                  isBot
+                                      ? Alignment.centerLeft
+                                      : Alignment.centerRight,
+                              child: Container(
+                                margin: EdgeInsets.symmetric(vertical: 4),
+                                padding: EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color:
+                                      isBot
+                                          ? Colors.grey[200]
+                                          : Color(0xFFF9BC60),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  message['text']!,
+                                  style: TextStyle(
+                                    color:
+                                        isBot ? Colors.black : Colors.black87,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    Divider(height: 1),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: chatController,
+                              decoration: InputDecoration(
+                                hintText: 'Tulis pertanyaan...',
+                                hintStyle: TextStyle(color: Colors.black45),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: 10,
+                                  horizontal: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: () async {
+                              String userInput = chatController.text.trim();
+                              if (userInput.isNotEmpty) {
+                                setState(() {
+                                  localMessages.add({
+                                    "sender": "user",
+                                    "text": userInput,
+                                  });
+                                  chatController.clear();
+                                });
+
+                                await sendMessage(
+                                  message: userInput,
+                                  onResult: (botReply) {
+                                    setState(() {
+                                      localMessages.add({
+                                        "sender": "bot",
+                                        "text": botReply,
+                                      });
+                                    });
+                                  },
+                                  onError: (errorMsg) {
+                                    setState(() {
+                                      localMessages.add({
+                                        "sender": "bot",
+                                        "text": errorMsg,
+                                      });
+                                    });
+                                  },
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFFF9BC60),
+                            ),
+                            child: Text(
+                              'Kirim',
+                              style: TextStyle(color: Colors.black),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _showExitConfirmation() {
     showDialog(
       context: context,
@@ -107,12 +295,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                'Tidak',
-                style: TextStyle(
-                  color: Colors.white,
-                ), // Font color set to white
-              ),
+              child: const Text('Tidak', style: TextStyle(color: Colors.white)),
             ),
             const SizedBox(width: 10),
             ElevatedButton(
@@ -154,7 +337,6 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -198,8 +380,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   const SizedBox(height: 20),
                   const Divider(color: Color(0xFFF9BC60), thickness: 1),
                   const SizedBox(height: 20),
-
-                  // Motivational Text
                   const Text(
                     "Let's make today productive!",
                     style: TextStyle(
@@ -209,8 +389,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ),
                   const SizedBox(height: 30),
-
-                  // Grid Menu
                   Expanded(
                     child: GridView.count(
                       crossAxisCount: 2,
@@ -220,23 +398,21 @@ class _MyHomePageState extends State<MyHomePage> {
                         MenuCard(
                           title: 'Pengabdian Masyarakat',
                           imagePath: 'assets/pengmas.png',
-                          onTap: () {},
+                          onTap: () => pc.jumpToPage(3),
                         ),
                         MenuCard(
                           title: 'Penelitian',
                           imagePath: 'assets/penelitian.png',
-                          onTap: () {},
+                          onTap: () => pc.jumpToPage(2),
                         ),
                         MenuCard(
                           title: 'Course',
                           imagePath: 'assets/course.png',
-                          onTap: () {},
+                          onTap: () => pc.jumpToPage(1),
                         ),
                       ],
                     ),
                   ),
-
-                  // Tombol keluar di bawah
                   Align(
                     alignment: Alignment.centerLeft,
                     child: ElevatedButton(
@@ -260,67 +436,45 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ),
-      bottomNavigationBar: Material(
-        elevation: 10,
-        color: Colors.transparent, // supaya tidak nutupi Container
-        child: Container(
-          height: 111,
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Color(0xFF2A2A2A),
-                blurRadius: 10,
-                offset: Offset(1, -4), // Arahkan ke atas
-              ),
-            ],
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => showChatPopup(context),
+        child: Icon(Icons.chat),
+        backgroundColor: Color(0xFFF9BC60),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Color(0xFFF9BC60),
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Color(0xFF004643),
+        currentIndex: selected,
+        onTap: (index) {
+          setState(() {
+            selected = index;
+          });
+          pc.animateToPage(
+            index,
+            duration: Duration(milliseconds: 200),
+            curve: Curves.linear,
+          );
+        },
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_filled, size: 28),
+            label: 'Beranda',
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-            ),
-            child: Container(
-              height: 111,
-              child: BottomNavigationBar(
-                type: BottomNavigationBarType.fixed,
-                backgroundColor: Color(
-                  0xFFF9BC60,
-                ), // Supaya transparan, pakai warna Container
-                selectedItemColor: Colors.white,
-                unselectedItemColor: Color(0xFF004643),
-                currentIndex: selected,
-                onTap: (index) {
-                  setState(() {
-                    selected = index;
-                  });
-                  pc.animateToPage(
-                    index,
-                    duration: Duration(milliseconds: 200),
-                    curve: Curves.linear,
-                  );
-                },
-                items: [
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.home_filled, size: 37),
-                    label: 'Homepage',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.book, size: 37),
-                    label: 'Mata Kuliah',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.article, size: 37),
-                    label: 'Penelitian',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.people, size: 37),
-                    label: 'Pengabdian\nMasyarakat',
-                  ),
-                ],
-              ),
-            ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.book, size: 28),
+            label: 'Mata Kuliah',
           ),
-        ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.article, size: 28),
+            label: 'Penelitian',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people_alt, size: 28),
+            label: 'Pengmas',
+          ),
+        ],
       ),
     );
   }
@@ -340,33 +494,22 @@ class MenuCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Color(0xFFF9BC60),
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(2, 4),
-            ),
-          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(imagePath, height: 80),
-            const SizedBox(height: 10),
+            Image.asset(imagePath, height: 70),
+            SizedBox(height: 10),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF004643),
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
         ),

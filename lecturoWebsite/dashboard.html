@@ -1,66 +1,160 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lecturo</title>
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #004643;
-            color: #ffffff;
-        }
-        
-        .navbar {
-            background-color: #004643;
-        }
-        .navbar-brand {
-            display: flex;
-            align-items: center;
-        }
-        .navbar-brand .circle {
-            width: 15px;
-            height: 15px;
-            background-color: #F9BC60;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-        .btn-custom {
-            background-color: #F9BC60;
-            color: #001E1D;
-            border: none;
-            transition: transform 0.3s, box-shadow 0.3s;
-            font-weight: bold;
-        }
-        .btn-custom:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-        }
-        .activities {
-            background-color: #ABD1C6;
-            color: #004643;
-            padding: 50px 0;
-        }
-        .activities .card {
-            transition: transform 0.3s, box-shadow 0.3s;
-            color: #004643;
-            padding: 50px 0;
-        }
-        .activities .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-        }
-        footer {
-            background-color: #004643;
-            color: white;
-            padding: 30px 0;
-        }
-    </style>
-</head>
-<body>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Lecturo</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+        <style>
+            body {
+                background-color: #004643;
+                color: #ffffff;
+            }
+            .navbar {
+                background-color: #004643;
+            }
+            .navbar-brand {
+                display: flex;
+                align-items: center;
+            }
+            .navbar-brand .circle {
+                width: 15px;
+                height: 15px;
+                background-color: #F9BC60;
+                border-radius: 50%;
+                margin-right: 10px;
+            }
+            .btn-custom {
+                background-color: #F9BC60;
+                color: #001E1D;
+                border: none;
+                transition: transform 0.3s, box-shadow 0.3s;
+                font-weight: bold;
+            }
+            .btn-custom:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            }
+            .activities {
+                background-color: #ABD1C6;
+                color: #004643;
+                padding: 50px 0;
+            }
+            .activities .card {
+                transition: transform 0.3s, box-shadow 0.3s;
+                color: #004643;
+            }
+            .activities .card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            }
+            footer {
+                background-color: #004643;
+                color: white;
+                padding: 30px 0;
+            }
+            /* Chat Button */
+            .chat-btn {
+                position: fixed;
+                bottom: 30px;
+                right: 30px;
+                width: 60px;
+                height: 60px;
+                background-color: #F9BC60;
+                color: #001E1D;
+                border: none;
+                border-radius: 50%;
+                font-size: 24px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                cursor: pointer;
+                z-index: 9999; /* ← ubah ke 9999 */
+            }
+
+
+            /* Chat Popup */
+            .chat-popup {
+                position: fixed;
+                bottom: 100px;
+                right: 30px;
+                width: 320px;
+                max-height: 450px;
+                background-color: #ffffff;
+                border-radius: 15px;
+                box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+                display: none;
+                flex-direction: column;
+                overflow: hidden;
+                z-index: 999;
+            }
+
+            /* Header Chat */
+            .chat-header {
+                background-color: #004643;
+                color: white;
+                padding: 10px 15px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            /* Chat Content */
+            .chat-messages {
+                padding: 10px;
+                height: 250px;
+                overflow-y: auto;
+                background-color: #f8f9fa;
+                color: #001E1D;
+            }
+
+            .chat-input {
+                display: flex;
+                border-top: 1px solid #ddd;
+            }
+
+            .chat-input input {
+                flex: 1;
+                padding: 10px;
+                border: none;
+                outline: none;
+            }
+
+            .chat-input button {
+                padding: 10px 15px;
+                border: none;
+                background-color: #F9BC60;
+                color: #001E1D;
+                font-weight: bold;
+            }
+
+            #chatPopup {
+                opacity: 0;
+                visibility: hidden;
+                transform: translateY(20px);
+                transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+                position: fixed;
+                bottom: 80px;
+                right: 30px;
+                width: 400px;
+                height: 450px;
+                background-color: #ffffff;
+                color: #000;
+                border-radius: 10px;
+                box-shadow: 0 0 20px rgba(0,0,0,0.2);
+                display: flex;
+                flex-direction: column;
+                z-index: 999;
+            }
+
+            /* Saat muncul */
+            #chatPopup.show {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+            }
+        </style>
+    </head>
+    <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
@@ -68,24 +162,16 @@
                 <div class="circle"></div>
                 Lecturo
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="Course/viewCourse.html">Mata Kuliah</a></li>
+                    <li class="nav-item"><a class="nav-link" href="penelitian/viewPenelitian.html">Penelitian</a></li>
+                    <li class="nav-item"><a class="nav-link" href="abdimas/viewAbdimas.html">Pengabdian Masyarakat</a></li>
                     <li class="nav-item">
-                        <a class="nav-link" href="Course/viewCourse.html">Mata Kuliah</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="penelitian/viewPenelitian.html">Penelitian</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="abdimas/viewAbdimas.html">Pengabdian Masyarakat</a>
-                    </li>
-                    <li class="nav-item">
-                        <button id="logoutBtn" class="btn btn-warning">
-                            <i class="bi bi-box-arrow-right"></i> Keluar
-                        </button>
+                        <button id="logoutBtn" class="btn btn-warning"><i class="bi bi-box-arrow-right"></i> Keluar</button>
                     </li>
                 </ul>
             </div>
@@ -98,10 +184,10 @@
             <div class="row align-items-center">
                 <div class="col-lg-6">
                     <h1 class="display-4 fw-bold">Halo Selamat datang kembali! </h1>
-                    <p class="lead">Lecturo memudahkan Anda mengatur kegiatan pembelajaran terbaik untuk setiap kegiatan. Dari kegiatan mengajar hingga pengabdian masyarakat, semua tersedia dalam satu platform.</p>
+                    <p class="lead">Lecturo memudahkan Anda mengatur kegiatan pembelajaran terbaik untuk setiap kegiatan.</p>
                 </div>
                 <div class="col-lg-6 text-center">
-                    <img src="https://partnership.telkomuniversity.ac.id/wp-content/uploads/2022/03/Telkom-University-Landmark-Tower-TULT-yang-rencana-selesai-Juni-2021-640x381-1.jpg" alt="Welcome Image" class="img-fluid rounded shadow">
+                    <img src="https://partnership.telkomuniversity.ac.id/wp-content/uploads/2022/03/Telkom-University-Landmark-Tower-TULT-yang-rencana-selesai-Juni-2021-640x381-1.jpg" class="img-fluid rounded shadow">
                 </div>
             </div>
         </div>
@@ -132,8 +218,27 @@
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer>
+    <!-- Chat Bot Button -->
+    <button class="chat-btn" id="chatToggle"><i class="bi bi-chat-dots"></i></button>
+
+    <!-- Chat Popup -->
+    <div class="chat-popup" id="chatPopup">
+        <div class="chat-header">
+            <span>Lecturo AI</span>
+            <button class="btn-close btn-close-white" id="chatClose" aria-label="Close"></button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div><em>Halo! Ada yang bisa saya bantu?</em></div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="userMessage" placeholder="Tulis pertanyaan...">
+            <button id="sendChat">Kirim</button>
+        </div>
+    </div>
+
+
+     <!-- Footer -->
+     <footer>
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
@@ -162,17 +267,58 @@
         </div>
     </footer>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.getElementById("logoutBtn").addEventListener("click", function () {
-            // Hapus token/kode dari localStorage (jika digunakan untuk auth)
             localStorage.removeItem("token");
             localStorage.removeItem("kode");
-
-            // Redirect ke index.html
             window.location.href = "index.html";
         });
-    </script>
-</body>
+    
+        window.addEventListener("DOMContentLoaded", () => {
+            const chatBtn = document.getElementById("chatToggle");
+            const chatPopup = document.getElementById("chatPopup");
+            const chatClose = document.getElementById("chatClose");
+            const sendChatBtn = document.getElementById("sendChat");
+            const chatMessages = document.getElementById("chatMessages");
+            const userMessage = document.getElementById("userMessage");
+    
+            // Buka chat box dengan animasi
+            chatBtn.addEventListener("click", () => {
+                chatPopup.classList.add("show");
+            });
+    
+            // Tutup chat box dengan animasi
+            chatClose.addEventListener("click", () => {
+                chatPopup.classList.remove("show");
+            });
+    
+            // Kirim pesan
+            sendChatBtn.addEventListener("click", async () => {
+                const message = userMessage.value.trim();
+                if (!message) return;
+    
+                chatMessages.innerHTML += `<div><strong>Anda:</strong> ${message}</div>`;
+                userMessage.value = "";
+    
+                try {
+                    const response = await fetch("http://127.0.0.1:8000/api/send-message", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Accept": "application/json"
+                        },
+                        body: JSON.stringify({ message })
+                    });
+    
+                    const data = await response.json();
+                    chatMessages.innerHTML += `<div><strong>Lecturo AI:</strong> ${data.response}</div>`;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                } catch (err) {
+                    chatMessages.innerHTML += `<div><em>Gagal menghubungi server.</em></div>`;
+                }
+            });
+        });
+    </script>    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
 </html>
