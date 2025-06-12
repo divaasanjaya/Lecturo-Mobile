@@ -1,0 +1,187 @@
+<?php session_start(); ?>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Lecturo - Abdimas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" 
+          rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" 
+          rel="stylesheet">
+    <style>
+        body {
+            background-color: #004643;
+            color: #ffffff;
+        }
+        .navbar {
+            background-color: #004643;
+        }
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            font-weight: bolder;
+        }
+        .navbar-brand .circle {
+            width: 15px;
+            height: 15px;
+            background-color: #F9BC60;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .abdimas-button {
+            background-color: #F9BC60;
+            color: #004643;
+            font-weight: bold;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
+        .abdimas-card {
+            background-color: #ABD1C6;
+            color: #004643;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+        .view-abdimas-btn {
+            background-color: #004643;
+            color: #ffffff;
+            border: none;
+        }
+        .view-abdimas-btn:hover {
+            background-color: #F9BC60;
+            color: #004643;
+        }
+        .btn-transparent:hover {
+            background-color: #F9BC60;
+            color: #004643;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="../dashboard.html">
+                <div class="circle"></div>
+                Lecturo
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="../course/viewCourse.html">Mata Kuliah</a></li>
+                    <li class="nav-item"><a class="nav-link" href="../penelitian/viewPenelitian.html">Penelitian</a></li>
+                    <li class="nav-item"><a class="nav-link" href="viewAbdimas.html">Pengabdian Masyarakat</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="container mt-4">
+        <!-- Abdimas Button -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="abdimas-button">Daftar Abdimas</div>
+            <a href="addAbdimas.html" class="btn abdimas-button rounded-circle"><b>+</b></a>
+        </div>
+
+        <div class="row g-4" id="abdimasContainer">
+            <!-- Abdimas cards will be inserted here -->
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Fetch Abdimas from API -->
+    <script>
+        async function hapusAbdimas(kodeAbdimas) {
+            const konfirmasi = confirm("Apakah Anda yakin ingin menghapus abdimas ini?");
+            if (!konfirmasi) return;
+
+            const kodeDosen = localStorage.getItem("kode");
+            if (!kodeDosen) {
+            alert("Kode Dosen tidak ditemukan. Silakan login ulang.");
+            return;
+            }
+
+            try {
+            const response = await fetch("http://127.0.0.1:8000/api/abdimas/delete", {
+                method: "POST",
+                headers: {
+                "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                kodeDosen: kodeDosen,
+                kodeAbdimas: parseInt(kodeAbdimas)
+                })
+            });
+
+            const result = await response.json();
+            if (response.ok && result.success) {
+                alert("Abdimas berhasil dihapus!");
+                window.location.reload(); // reload data setelah delete
+            } else {
+                alert("Gagal menghapus abdimas: " + (result.message || "Terjadi kesalahan"));
+            }
+            } catch (err) {
+            alert("Terjadi kesalahan saat mengirim permintaan: " + err.message);
+            }
+        }
+
+        const kode = localStorage.getItem("kode");
+
+        fetch("http://127.0.0.1:8000/api/abdimas", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ kode: kode })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById("abdimasContainer");
+
+            if (data.success && data.abdimas.length > 0) {
+                data.abdimas.forEach(item => {
+                    const tanggal = new Date(item.tanggal);
+                    const tanggalFormat = tanggal.toLocaleDateString("id-ID", {
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric'
+                    });
+
+                    container.innerHTML += `
+                        <div class="col-md-4">
+                            <div class="abdimas-card shadow-sm rounded">
+                                <div class="p-3">
+                                    <h6>${item.nama}</h6>
+                                    <p class="text-muted fw-normal">Tanggal : ${tanggalFormat}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <a href='dashboardAbdimas.html?kode=${item.kode}' class="btn view-abdimas-btn w-100 fw-semibold me-2">View Abdimas</a>
+                                        <a href='editAbdimas.html?kode=${item.kode}' class="btn btn-sm btn-transparent me-1" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button 
+                                            type="button" 
+                                            class="btn btn-sm btn-transparent" 
+                                            onclick="hapusAbdimas('${item.kode}')"
+                                        >
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+            } else {
+                container.innerHTML = `<div class="col-12"><p class="text-white text-center">Tidak ada data Abdimas.</p></div>`;
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching Abdimas:", error);
+            document.getElementById("abdimasContainer").innerHTML = `<div class="col-12"><p class="text-white text-center">Gagal memuat data.</p></div>`;
+        });
+    </script>
+</body>
+</html>

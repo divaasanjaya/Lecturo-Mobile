@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Lecturo - Buat Quiz</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #004643; color: #fff; }
+    .navbar { background-color: #004643; }
+    .navbar-brand { display: flex; align-items: center; font-weight: bolder; }
+    .navbar-brand .circle {
+      width: 15px; height: 15px; background-color: #F9BC60;
+      border-radius: 50%; margin-right: 10px;
+    }
+    .modal-content { background-color: #ABD1C6; border-radius: 10px; }
+    .btn-create {
+      background-color: #F9BC60; color: #004643; font-weight: bold;
+    }
+    .btn-create:hover {
+      background-color: #e9a932; color: #000;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+      <a class="navbar-brand" href="#">
+        <div class="circle"></div>Lecturo
+      </a>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container d-flex justify-content-center align-items-center p-4">
+    <div class="modal-content p-5 shadow-lg w-50">
+      <h3 class="mb-4 fw-bold text-dark">Buat Quiz</h3>
+      <form id="quizForm">
+        <div class="mb-3">
+          <label for="QuizName" class="form-label fw-bolder text-dark">Nama Quiz</label>
+          <input type="text" class="form-control" id="QuizName" name="nama" placeholder="Masukkan nama quiz" required>
+        </div>
+        <div class="mb-3">
+          <label for="deadline" class="form-label fw-bolder text-dark">Deadline</label>
+          <input type="text" class="form-control" id="deadline" name="deskripsi" placeholder="Masukkan deadline quiz" required>
+        </div>
+        <div class="mb-3">
+          <label for="kodeMatkul" class="form-label fw-bolder text-dark">Kode Mata Kuliah</label>
+          <input type="text" class="form-control" id="kodeMatkul" name="kodeMatkul" readonly>
+        </div>
+        <div class="mb-3">
+          <label for="kodeKelas" class="form-label fw-bolder text-dark">Kode Kelas</label>
+          <input type="text" class="form-control" id="kodeKelas" name="kodeKelas" readonly>
+        </div>
+        <div class="text-center">
+          <button type="submit" class="btn btn-create w-100">Tambah</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Ambil parameter dari URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const kodeMK = urlParams.get("kodeMK");
+    const kodeKelas = urlParams.get("kodeKelas");
+
+    // Isi input readonly
+    document.getElementById("kodeMatkul").value = kodeMK;
+    document.getElementById("kodeKelas").value = kodeKelas;
+
+    // Submit handler
+    document.getElementById("quizForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const nama = document.getElementById("QuizName").value;
+      const deskripsi = document.getElementById("deadline").value;
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/quiz/add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nama,
+            deskripsi,
+            kodeMatkul: kodeMK,
+            kodeKelas: kodeKelas
+          })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          alert("Quiz berhasil ditambahkan!");
+          window.location.href = `../dashboardCourse.html?kodeMK=${kodeMK}&&kodeKelas=${kodeKelas}`;
+        } else {
+          alert("Gagal menambahkan quiz.");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Terjadi kesalahan saat mengirim data.");
+      }
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
